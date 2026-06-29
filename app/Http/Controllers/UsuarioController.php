@@ -62,4 +62,28 @@ class UsuarioController extends Controller
     {
         //
     }
+
+    /**
+     * Show the login form.
+     */
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+    /**
+     * Show the registration form.
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Show the dashboard.
+     */
+    public function dashboard()
+    {
+        return view('dashboard');
+    }
 }
