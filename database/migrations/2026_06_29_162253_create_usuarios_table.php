@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('email', 150)->unique();
             $table->string('password');
             $table->enum('estado', ['ACTIVO', 'INACTIVO'])->default('ACTIVO');
+            $table->string('remember_token', 100)->nullable();
+            $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

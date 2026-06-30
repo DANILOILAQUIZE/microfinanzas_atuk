@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('usuario_id')->constrained('usuarios');
             $table->enum('tipo', ['DEPOSITO', 'RETIRO'])->nullable();
             $table->decimal('monto', 12, 2)->nullable();
+            $table->decimal('saldo_anterior', 12, 2)->nullable();
+            $table->decimal('saldo_posterior', 12, 2)->nullable();
             $table->dateTime('fecha')->nullable();
             $table->text('descripcion')->nullable();
             $table->timestamps();
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('movimiento_ahorros');
+        Schema::dropIfExists('movimientos_ahorro');
     }
 };

@@ -11,12 +11,16 @@ class Prestamo extends Model
     protected $fillable = [
         'socio_id',
         'tipo_prestamo_id',
+        'usuario_id',
         'monto',
         'interes',
         'plazo',
         'fecha_desembolso',
         'saldo',
         'estado',
+        'estado_aprobacion',
+        'fecha_aprobacion',
+        'observaciones',
     ];
 
     protected $casts = [
@@ -24,6 +28,7 @@ class Prestamo extends Model
         'interes' => 'decimal:2',
         'saldo' => 'decimal:2',
         'fecha_desembolso' => 'date',
+        'fecha_aprobacion' => 'datetime',
     ];
 
     public function socio()
@@ -34,6 +39,11 @@ class Prestamo extends Model
     public function tipoPrestamo()
     {
         return $this->belongsTo(TipoPrestamo::class, 'tipo_prestamo_id');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 
     public function cuotas()

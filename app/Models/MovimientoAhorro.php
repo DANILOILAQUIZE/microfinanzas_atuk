@@ -13,12 +13,16 @@ class MovimientoAhorro extends Model
         'usuario_id',
         'tipo',
         'monto',
+        'saldo_anterior',
+        'saldo_posterior',
         'fecha',
         'descripcion',
     ];
 
     protected $casts = [
         'monto' => 'decimal:2',
+        'saldo_anterior' => 'decimal:2',
+        'saldo_posterior' => 'decimal:2',
         'fecha' => 'datetime',
     ];
 

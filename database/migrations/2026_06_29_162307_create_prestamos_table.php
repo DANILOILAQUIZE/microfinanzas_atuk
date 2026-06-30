@@ -21,6 +21,10 @@ return new class extends Migration
             $table->date('fecha_desembolso')->nullable();
             $table->decimal('saldo', 12, 2)->nullable();
             $table->enum('estado', ['PENDIENTE', 'APROBADO', 'FINALIZADO', 'MORA'])->nullable();
+            $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->comment('Usuario que registró/aprobó el préstamo');
+            $table->enum('estado_aprobacion', ['PENDIENTE', 'APROBADO', 'RECHAZADO'])->default('PENDIENTE');
+            $table->timestamp('fecha_aprobacion')->nullable();
+            $table->text('observaciones')->nullable();
             $table->timestamps();
         });
     }
