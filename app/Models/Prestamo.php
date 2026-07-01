@@ -12,7 +12,11 @@ class Prestamo extends Model
         'socio_id',
         'tipo_prestamo_id',
         'usuario_id',
+        'usuario_aprobador_id',
+        'fecha_solicitud',
         'monto',
+        'monto_total',
+        'monto_cuota',
         'interes',
         'plazo',
         'fecha_desembolso',
@@ -21,12 +25,16 @@ class Prestamo extends Model
         'estado_aprobacion',
         'fecha_aprobacion',
         'observaciones',
+        'motivo_rechazo',
     ];
 
     protected $casts = [
         'monto' => 'decimal:2',
+        'monto_total' => 'decimal:2',
+        'monto_cuota' => 'decimal:2',
         'interes' => 'decimal:2',
         'saldo' => 'decimal:2',
+        'fecha_solicitud' => 'date',
         'fecha_desembolso' => 'date',
         'fecha_aprobacion' => 'datetime',
     ];
@@ -44,6 +52,11 @@ class Prestamo extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
+    public function usuarioAprobador()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_aprobador_id');
     }
 
     public function cuotas()

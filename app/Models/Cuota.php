@@ -10,23 +10,25 @@ class Cuota extends Model
 
     protected $fillable = [
         'prestamo_id',
-        'numero',
+        'numero_cuota',
         'fecha_vencimiento',
+        'fecha_pago',
+        'monto',
         'capital',
         'interes',
-        'iva',
         'mora',
-        'total',
+        'saldo_pendiente',
         'estado',
     ];
 
     protected $casts = [
         'capital' => 'decimal:2',
         'interes' => 'decimal:2',
-        'iva' => 'decimal:2',
+        'monto' => 'decimal:2',
         'mora' => 'decimal:2',
-        'total' => 'decimal:2',
+        'saldo_pendiente' => 'decimal:2',
         'fecha_vencimiento' => 'date',
+        'fecha_pago' => 'date',
     ];
 
     public function prestamo()

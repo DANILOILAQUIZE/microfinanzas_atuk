@@ -10,12 +10,21 @@ class TipoPrestamo extends Model
 
     protected $fillable = [
         'nombre',
+        'descripcion',
         'interes',
+        'monto_minimo',
+        'monto_maximo',
+        'plazo_minimo',
         'plazo_maximo',
+        'estado',
+        'requiere_garantia',
     ];
 
     protected $casts = [
         'interes' => 'decimal:2',
+        'monto_minimo' => 'decimal:2',
+        'monto_maximo' => 'decimal:2',
+        'requiere_garantia' => 'boolean',
     ];
 
     public function prestamos()

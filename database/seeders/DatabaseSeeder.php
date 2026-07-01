@@ -16,7 +16,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolSeeder::class,
+            PermisoSeeder::class,
             UsuarioSeeder::class,
+            TipoPrestamoSeeder::class,
+            ParametroSeeder::class,
+            SocioPrestamoSeeder::class, // Datos de prueba
+            CuentaAhorroSeeder::class, // Cuentas de ahorro de ejemplo
+            MovimientoAhorroSeeder::class, // Movimientos de ahorro de ejemplo
         ]);
     }
 }

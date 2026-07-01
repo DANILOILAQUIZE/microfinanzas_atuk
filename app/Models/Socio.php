@@ -12,8 +12,13 @@ class Socio extends Model
         'cedula',
         'nombres',
         'apellidos',
+        'fecha_nacimiento',
+        'genero',
         'telefono',
         'direccion',
+        'ciudad',
+        'ocupacion',
+        'ingresos_mensuales',
         'correo',
         'fecha_registro',
         'estado',
@@ -21,7 +26,27 @@ class Socio extends Model
 
     protected $casts = [
         'fecha_registro' => 'date',
+        'fecha_nacimiento' => 'date',
+        'ingresos_mensuales' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    // Accesorios para mantener compatibilidad con las vistas
+    public function getNombreAttribute()
+    {
+        return $this->attributes['nombres'] ?? null;
+    }
+
+    public function getApellidoAttribute()
+    {
+        return $this->attributes['apellidos'] ?? null;
+    }
+
+    public function getEmailAttribute()
+    {
+        return $this->attributes['correo'] ?? null;
+    }
 
     public function cuentasAhorro()
     {

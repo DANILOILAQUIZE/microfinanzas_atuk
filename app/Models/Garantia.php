@@ -13,10 +13,17 @@ class Garantia extends Model
         'tipo',
         'descripcion',
         'valor',
+        'estado',
+        'documento_soporte',
+        'fecha_registro',
+        'fecha_liberacion',
+        'observaciones',
     ];
 
     protected $casts = [
         'valor' => 'decimal:2',
+        'fecha_registro' => 'date',
+        'fecha_liberacion' => 'date',
     ];
 
     public function prestamo()
