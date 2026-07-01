@@ -129,4 +129,35 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/movimientos-ahorro', [\App\Http\Controllers\MovimientoAhorroController::class, 'store'])->name('movimientos-ahorro.store');
         Route::delete('/movimientos-ahorro/{movimientoAhorro}/anular', [\App\Http\Controllers\MovimientoAhorroController::class, 'anular'])->name('movimientos-ahorro.anular');
     });
+    
+    // Alertas de Riesgo - Admin y Gerente
+    Route::middleware(['permission:ver_reportes'])->group(function () {
+        Route::get('/alertas', [\App\Http\Controllers\AlertaRiesgoController::class, 'index'])->name('alertas.index');
+        Route::get('/alertas/{alerta}', [\App\Http\Controllers\AlertaRiesgoController::class, 'show'])->name('alertas.show');
+        Route::put('/alertas/{alerta}/marcar-leida', [\App\Http\Controllers\AlertaRiesgoController::class, 'marcarLeida'])->name('alertas.marcar-leida');
+        Route::put('/alertas/marcar-todas-leidas', [\App\Http\Controllers\AlertaRiesgoController::class, 'marcarTodasLeidas'])->name('alertas.marcar-todas-leidas');
+        Route::post('/alertas/generar-manualmente', [\App\Http\Controllers\AlertaRiesgoController::class, 'generarManualmente'])->name('alertas.generar-manualmente');
+        Route::delete('/alertas/{alerta}', [\App\Http\Controllers\AlertaRiesgoController::class, 'destroy'])->name('alertas.destroy');
+    });
+    
+    // Notificaciones - Admin y Gerente
+    Route::middleware(['permission:ver_reportes'])->group(function () {
+        Route::get('/notificaciones', [\App\Http\Controllers\NotificacionController::class, 'index'])->name('notificaciones.index');
+        Route::get('/notificaciones/{notificacion}', [\App\Http\Controllers\NotificacionController::class, 'show'])->name('notificaciones.show');
+        Route::put('/notificaciones/{notificacion}/marcar-leida', [\App\Http\Controllers\NotificacionController::class, 'marcarLeida'])->name('notificaciones.marcar-leida');
+        Route::put('/notificaciones/marcar-todas-leidas', [\App\Http\Controllers\NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.marcar-todas-leidas');
+        Route::post('/notificaciones/enviar-manualmente', [\App\Http\Controllers\NotificacionController::class, 'enviarManualmente'])->name('notificaciones.enviar-manualmente');
+        Route::delete('/notificaciones/{notificacion}', [\App\Http\Controllers\NotificacionController::class, 'destroy'])->name('notificaciones.destroy');
+    });
+    
+    // Reportes BI - Admin y Gerente
+    Route::middleware(['permission:ver_reportes'])->group(function () {
+        Route::get('/reportes', [\App\Http\Controllers\ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/cartera', [\App\Http\Controllers\ReporteController::class, 'cartera'])->name('reportes.cartera');
+        Route::get('/reportes/morosidad', [\App\Http\Controllers\ReporteController::class, 'morosidad'])->name('reportes.morosidad');
+        Route::get('/reportes/rentabilidad', [\App\Http\Controllers\ReporteController::class, 'rentabilidad'])->name('reportes.rentabilidad');
+        Route::get('/reportes/kpis', [\App\Http\Controllers\ReporteController::class, 'kpis'])->name('reportes.kpis');
+        Route::get('/reportes/socios', [\App\Http\Controllers\ReporteController::class, 'socios'])->name('reportes.socios');
+    });
 });
+

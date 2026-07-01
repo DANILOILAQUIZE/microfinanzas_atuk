@@ -115,8 +115,9 @@
                             <div class="dropdown-menu">
                                 <div class="dropdown-menu-columns">
                                     <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="#">Reportes</a>
-                                        <a class="dropdown-item" href="#">Alertas de Riesgo</a>
+                                        <a class="dropdown-item" href="{{ route('reportes.index') }}">Reportes</a>
+                                        <a class="dropdown-item" href="{{ route('alertas.index') }}">Alertas de Riesgo</a>
+                                        <a class="dropdown-item" href="{{ route('notificaciones.index') }}">Notificaciones</a>
                                     </div>
                                 </div>
                             </div>

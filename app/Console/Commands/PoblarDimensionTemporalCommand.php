@@ -15,7 +15,7 @@ class PoblarDimensionTemporalCommand extends Command
     {
         $this->info('Iniciando población de dimensión temporal...');
 
-        $years = $this->option('years');
+        $years = (int) $this->option('years');
         $startDate = Carbon::now()->subYear(); // Desde hace 1 año
         $endDate = Carbon::now()->addYears($years); // Hasta N años adelante
 
@@ -33,9 +33,10 @@ class PoblarDimensionTemporalCommand extends Command
                     'mes' => $currentDate->month,
                     'trimestre' => $currentDate->quarter,
                     'dia' => $currentDate->day,
-                    'dia_semana' => $currentDate->dayOfWeek,
                     'nombre_mes' => $currentDate->locale('es')->monthName,
+                    'nombre_trimestre' => 'Q' . $currentDate->quarter,
                     'nombre_dia' => $currentDate->locale('es')->dayName,
+                    'dia_semana' => $currentDate->dayOfWeek,
                     'es_fin_semana' => $currentDate->isWeekend(),
                 ]);
 

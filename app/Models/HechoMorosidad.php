@@ -9,33 +9,42 @@ class HechoMorosidad extends Model
     protected $table = 'hecho_morosidad';
 
     protected $fillable = [
-        'dimension_temporal_id',
+        'fecha',
         'socio_id',
-        'prestamo_id',
-        'dias_mora',
-        'monto_mora',
-        'monto_vencido',
-        'nivel_riesgo',
-        'cuotas_vencidas',
+        'cartera_total',
+        'cartera_vencida',
+        'cuotas_vencidas_total',
+        'monto_mora_total',
+        'prestamos_vencidos',
+        'cuotas_mora_1_30',
+        'cuotas_mora_31_60',
+        'cuotas_mora_61_90',
+        'cuotas_mora_mas_90',
+        'monto_mora_1_30',
+        'monto_mora_31_60',
+        'monto_mora_61_90',
+        'monto_mora_mas_90',
     ];
 
     protected $casts = [
-        'monto_mora' => 'decimal:2',
-        'monto_vencido' => 'decimal:2',
+        'fecha' => 'date',
+        'cartera_total' => 'decimal:2',
+        'cartera_vencida' => 'decimal:2',
+        'cuotas_vencidas_total' => 'integer',
+        'monto_mora_total' => 'decimal:2',
+        'prestamos_vencidos' => 'integer',
+        'cuotas_mora_1_30' => 'integer',
+        'cuotas_mora_31_60' => 'integer',
+        'cuotas_mora_61_90' => 'integer',
+        'cuotas_mora_mas_90' => 'integer',
+        'monto_mora_1_30' => 'decimal:2',
+        'monto_mora_31_60' => 'decimal:2',
+        'monto_mora_61_90' => 'decimal:2',
+        'monto_mora_mas_90' => 'decimal:2',
     ];
-
-    public function dimensionTemporal()
-    {
-        return $this->belongsTo(DimensionTemporal::class, 'dimension_temporal_id');
-    }
 
     public function socio()
     {
         return $this->belongsTo(Socio::class, 'socio_id');
-    }
-
-    public function prestamo()
-    {
-        return $this->belongsTo(Prestamo::class, 'prestamo_id');
     }
 }

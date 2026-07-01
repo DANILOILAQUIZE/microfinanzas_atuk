@@ -9,21 +9,25 @@ class HechoCartera extends Model
     protected $table = 'hecho_cartera';
 
     protected $fillable = [
+        'fecha',
         'dimension_temporal_id',
         'socio_id',
         'tipo_prestamo_id',
-        'monto_desembolsado',
-        'monto_pagado',
-        'saldo_pendiente',
-        'prestamos_activos',
-        'prestamos_nuevos',
-        'prestamos_finalizados',
+        'cartera_total',
+        'cartera_vigente',
+        'cartera_vencida',
+        'numero_prestamos',
+        'monto_desembolsado_mes',
+        'monto_recuperado_mes',
     ];
 
     protected $casts = [
-        'monto_desembolsado' => 'decimal:2',
-        'monto_pagado' => 'decimal:2',
-        'saldo_pendiente' => 'decimal:2',
+        'fecha' => 'date',
+        'cartera_total' => 'decimal:2',
+        'cartera_vigente' => 'decimal:2',
+        'cartera_vencida' => 'decimal:2',
+        'monto_desembolsado_mes' => 'decimal:2',
+        'monto_recuperado_mes' => 'decimal:2',
     ];
 
     public function dimensionTemporal()
