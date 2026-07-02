@@ -88,14 +88,15 @@ class CuentaAhorroController extends Controller
             $numeroCuenta = $prefijo . '-' . $nuevoNumero;
 
             // Crear cuenta de ahorro
+            // El depósito inicial queda bloqueado permanentemente
             $cuenta = CuentaAhorro::create([
                 'socio_id' => $validated['socio_id'],
                 'numero_cuenta' => $numeroCuenta,
                 'fecha_apertura' => $validated['fecha_apertura'],
                 'deposito_inicial' => $validated['deposito_inicial'],
                 'saldo' => $validated['deposito_inicial'],
-                'saldo_disponible' => $validated['deposito_inicial'],
-                'saldo_bloqueado' => 0,
+                'saldo_disponible' => 0, // Al inicio no hay saldo disponible, solo el bloqueado
+                'saldo_bloqueado' => $validated['deposito_inicial'], // El depósito inicial queda bloqueado
                 'estado' => 'ACTIVA',
                 'observaciones' => $validated['observaciones'],
             ]);

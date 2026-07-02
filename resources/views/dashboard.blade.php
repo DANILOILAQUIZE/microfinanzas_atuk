@@ -335,9 +335,11 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Préstamos Recientes</h3>
+                        @can('ver_prestamos')
                         <div class="card-actions">
                             <a href="{{ route('prestamos.index') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
                         </div>
+                        @endcan
                     </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table table-striped">
@@ -381,9 +383,11 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Movimientos de Ahorro Recientes</h3>
+                        @can('ver_movimientos_ahorro')
                         <div class="card-actions">
                             <a href="{{ route('movimientos-ahorro.index') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
                         </div>
+                        @endcan
                     </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table table-striped">

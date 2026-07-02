@@ -69,12 +69,12 @@ class DashboardController extends Controller
         // Socios activos
         $sociosActivos = Socio::where('estado', 'ACTIVO')->count();
 
-        // Índice de morosidad
-        $carteraVencida = Prestamo::where('estado', 'VENCIDO')->sum('saldo');
-        $indiceMorosidad = $carteraTotal > 0 ? ($carteraVencida / $carteraTotal) * 100 : 0;
-
-        // Cuotas vencidas
+        // Índice de morosidad (% de cuotas vencidas sobre cuotas pendientes)
         $cuotasVencidas = Cuota::where('estado', 'VENCIDA')->count();
+        $cuotasPendientes = Cuota::whereIn('estado', ['PENDIENTE', 'VENCIDA'])->count();
+        $indiceMorosidad = $cuotasPendientes > 0 ? ($cuotasVencidas / $cuotasPendientes) * 100 : 0;
+        
+        // Monto total de mora acumulada
         $montoMoraTotal = Cuota::where('estado', 'VENCIDA')->sum('mora');
 
         // Saldo total en ahorro
@@ -95,8 +95,8 @@ class DashboardController extends Controller
             'prestamosAprobadosMes' => $prestamosAprobadosMes,
             'sociosActivos' => $sociosActivos,
             'indiceMorosidad' => round($indiceMorosidad, 2),
-            'carteraVencida' => $carteraVencida,
             'cuotasVencidas' => $cuotasVencidas,
+            'cuotasPendientes' => $cuotasPendientes,
             'montoMoraTotal' => $montoMoraTotal,
             'saldoAhorro' => $saldoAhorro,
             'cuentasAhorro' => $cuentasAhorro,

@@ -9,6 +9,7 @@ use App\Models\KpiHistorico;
 use App\Models\Prestamo;
 use App\Models\Socio;
 use App\Models\Pago;
+use App\Models\Cuota;
 use App\Models\TipoPrestamo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -107,15 +108,19 @@ class ReporteController extends Controller
             ->get();
 
         // Estadísticas
+        $cuotasVencidas = Cuota::where('estado', 'VENCIDA')->count();
+        $cuotasPendientes = Cuota::whereIn('estado', ['PENDIENTE', 'VENCIDA'])->count();
         $carteraTotal = Prestamo::whereIn('estado', ['ACTIVO', 'VENCIDO'])->sum('saldo');
         $carteraVencida = Prestamo::where('estado', 'VENCIDO')->sum('saldo');
         
         $stats = [
-            'indice_morosidad' => $carteraTotal > 0 ? ($carteraVencida / $carteraTotal) * 100 : 0,
+            'indice_morosidad' => $cuotasPendientes > 0 ? ($cuotasVencidas / $cuotasPendientes) * 100 : 0,
             'cartera_vencida' => $carteraVencida,
+            'cartera_total' => $carteraTotal,
+            'cuotas_vencidas' => $cuotasVencidas,
+            'cuotas_pendientes' => $cuotasPendientes,
             'prestamos_vencidos' => Prestamo::where('estado', 'VENCIDO')->count(),
-            'mora_promedio' => Prestamo::where('estado', 'VENCIDO')
-                ->avg(DB::raw('DATEDIFF(NOW(), fecha_desembolso)')) ?? 0,
+            'monto_mora_total' => Cuota::where('estado', 'VENCIDA')->sum('mora'),
         ];
 
         return view('reportes.morosidad', compact('evolucion', 'rangosMora', 'sociosMorosos', 'stats', 'fechaInicio', 'fechaFin'));
@@ -140,11 +145,21 @@ class ReporteController extends Controller
             ->orderBy('mes')
             ->get();
 
-        // Ingresos por concepto
+        // Ingresos por concepto (desde cuotas pagadas)
+        $cuotasPagadas = DB::table('cuotas')
+            ->join('pagos', 'cuotas.id', '=', 'pagos.cuota_id')
+            ->whereBetween('pagos.fecha_pago', [$fechaInicio, $fechaFin])
+            ->select(
+                DB::raw('SUM(cuotas.capital) as capital'),
+                DB::raw('SUM(cuotas.interes) as interes'),
+                DB::raw('SUM(cuotas.mora) as mora')
+            )
+            ->first();
+        
         $ingresosPorConcepto = [
-            'capital' => Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])->sum('capital'),
-            'interes' => Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])->sum('interes'),
-            'mora' => Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])->sum('mora'),
+            'capital' => $cuotasPagadas->capital ?? 0,
+            'interes' => $cuotasPagadas->interes ?? 0,
+            'mora' => $cuotasPagadas->mora ?? 0,
         ];
 
         // Tipos de préstamo más rentables
@@ -152,7 +167,7 @@ class ReporteController extends Controller
                 'tipo_prestamo_id',
                 DB::raw('COUNT(*) as cantidad'),
                 DB::raw('SUM(monto) as monto_total'),
-                DB::raw('SUM(monto * (tasa_interes/100) * (plazo/12)) as interes_total')
+                DB::raw('SUM(monto_total - monto) as interes_total')
             )
             ->with('tipoPrestamo')
             ->where('estado_aprobacion', 'APROBADO')

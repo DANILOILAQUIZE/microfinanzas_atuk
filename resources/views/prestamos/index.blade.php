@@ -19,6 +19,19 @@
     </button>
     @endif
     
+    <a href="{{ route('prestamos.index', ['estado' => 'VENCIDO']) }}" class="btn btn-danger">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M12 9v4"/>
+            <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>
+            <path d="M12 16h.01"/>
+        </svg>
+        Ver Préstamos en Mora
+        @if(isset($totalVencidos) && $totalVencidos > 0)
+            <span class="badge bg-white text-danger ms-1">{{ $totalVencidos }}</span>
+        @endif
+    </a>
+    
     @if(hasPermission('aprobar_prestamos'))
     <form action="{{ route('prestamos.detectar-mora') }}" method="POST" style="display:inline;">
         @csrf
@@ -32,6 +45,30 @@
 
 @section('content')
 
+{{-- Alerta de Préstamos en Mora --}}
+@if(isset($totalVencidos) && $totalVencidos > 0 && !request()->filled('estado'))
+<div class="alert alert-danger alert-dismissible mb-3" role="alert">
+    <div class="d-flex">
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 9v4"/>
+                <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>
+                <path d="M12 16h.01"/>
+            </svg>
+        </div>
+        <div>
+            <h4 class="alert-title">¡Atención! Préstamos con Mora</h4>
+            <div class="text-muted">
+                Hay <strong>{{ $totalVencidos }} préstamos con cuotas vencidas</strong> que requieren seguimiento.
+                <a href="{{ route('prestamos.index', ['estado' => 'VENCIDO']) }}" class="alert-link">Ver préstamos en mora</a>
+            </div>
+        </div>
+    </div>
+    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+</div>
+@endif
+
 {{-- Filtros --}}
 <div class="row mb-3">
     <div class="col-12">
@@ -42,13 +79,24 @@
                         <label class="form-label">Buscar Socio</label>
                         <input type="text" name="buscar" class="form-control" placeholder="Nombre o cédula..." value="{{ request('buscar') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Estado Aprobación</label>
                         <select name="estado_aprobacion" class="form-select">
                             <option value="">Todos</option>
                             <option value="PENDIENTE" {{ request('estado_aprobacion') == 'PENDIENTE' ? 'selected' : '' }}>Pendiente</option>
                             <option value="APROBADO" {{ request('estado_aprobacion') == 'APROBADO' ? 'selected' : '' }}>Aprobado</option>
                             <option value="RECHAZADO" {{ request('estado_aprobacion') == 'RECHAZADO' ? 'selected' : '' }}>Rechazado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Estado Préstamo</label>
+                        <select name="estado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="PENDIENTE" {{ request('estado') == 'PENDIENTE' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="ACTIVO" {{ request('estado') == 'ACTIVO' ? 'selected' : '' }}>Activo</option>
+                            <option value="VENCIDO" {{ request('estado') == 'VENCIDO' ? 'selected' : '' }}>Vencido</option>
+                            <option value="CANCELADO" {{ request('estado') == 'CANCELADO' ? 'selected' : '' }}>Cancelado</option>
+                            <option value="RECHAZADO" {{ request('estado') == 'RECHAZADO' ? 'selected' : '' }}>Rechazado</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -60,7 +108,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -86,7 +134,7 @@
                             <th>Tipo</th>
                             <th>Monto</th>
                             <th>Plazo</th>
-                            <th>Aprobación</th>
+                            <th>Saldo</th>
                             <th>Estado</th>
                             <th class="w-1">Acciones</th>
                         </tr>
@@ -96,7 +144,7 @@
                         <tr>
                             <td>{{ $prestamo->fecha_solicitud ? $prestamo->fecha_solicitud->format('d/m/Y') : '-' }}</td>
                             <td>
-                                <div class="fw-bold">{{ $prestamo->socio->nombre ?? '-' }} {{ $prestamo->socio->apellido ?? '' }}</div>
+                                <div class="fw-bold">{{ $prestamo->socio->nombres ?? '-' }} {{ $prestamo->socio->apellidos ?? '' }}</div>
                                 <div class="text-muted small">{{ $prestamo->socio->cedula ?? '' }}</div>
                             </td>
                             <td>{{ $prestamo->tipoPrestamo->nombre ?? '-' }}</td>
@@ -106,33 +154,60 @@
                             </td>
                             <td>{{ $prestamo->plazo }} meses</td>
                             <td>
-                                @switch($prestamo->estado_aprobacion)
-                                    @case('PENDIENTE')
-                                        <span class="badge bg-warning">Pendiente</span>
-                                        @break
-                                    @case('APROBADO')
-                                        <span class="badge bg-success">Aprobado</span>
-                                        @break
-                                    @case('RECHAZADO')
-                                        <span class="badge bg-danger">Rechazado</span>
-                                        @break
-                                @endswitch
+                                <div class="fw-bold text-{{ $prestamo->saldo > 0 ? 'primary' : 'success' }}">${{ number_format($prestamo->saldo, 2) }}</div>
+                                @if($prestamo->saldo <= 0)
+                                    <div class="text-success small">✓ Pagado</div>
+                                @else
+                                    {{-- Calcular cuotas vencidas --}}
+                                    @php
+                                        $cuotasVencidas = $prestamo->cuotas->where('estado', 'VENCIDA')->count();
+                                        $moraTotal = $prestamo->cuotas->where('estado', 'VENCIDA')->sum('mora');
+                                    @endphp
+                                    @if($cuotasVencidas > 0)
+                                        <div class="text-danger small">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M12 9v4"/>
+                                                <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>
+                                                <path d="M12 16h.01"/>
+                                            </svg>
+                                            {{ $cuotasVencidas }} {{ $cuotasVencidas == 1 ? 'cuota vencida' : 'cuotas vencidas' }}
+                                        </div>
+                                        @if($moraTotal > 0)
+                                            <div class="text-danger small fw-bold">Mora: ${{ number_format($moraTotal, 2) }}</div>
+                                        @endif
+                                    @endif
+                                @endif
                             </td>
                             <td>
-                                @switch($prestamo->estado)
-                                    @case('PENDIENTE')
-                                        <span class="badge bg-yellow">Pendiente</span>
-                                        @break
-                                    @case('APROBADO')
+                                @if($prestamo->estado_aprobacion == 'PENDIENTE')
+                                    <span class="badge bg-warning">Pendiente Aprobación</span>
+                                @elseif($prestamo->estado_aprobacion == 'RECHAZADO')
+                                    <span class="badge bg-danger">Rechazado</span>
+                                @else
+                                    {{-- Préstamo aprobado, mostrar estado actual --}}
+                                    @php
+                                        $cuotasVencidas = $prestamo->cuotas->where('estado', 'VENCIDA')->count();
+                                    @endphp
+                                    
+                                    @if($prestamo->estado == 'CANCELADO')
+                                        <span class="badge bg-success">✓ Cancelado</span>
+                                    @elseif($cuotasVencidas > 0 || $prestamo->estado == 'VENCIDO')
+                                        <span class="badge bg-danger">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="vertical-align: -2px;">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M12 9v4"/>
+                                                <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>
+                                                <path d="M12 16h.01"/>
+                                            </svg>
+                                            VENCIDO - {{ $cuotasVencidas }} cuota(s)
+                                        </span>
+                                    @elseif($prestamo->estado == 'ACTIVO')
                                         <span class="badge bg-blue">Activo</span>
-                                        @break
-                                    @case('FINALIZADO')
-                                        <span class="badge bg-green">Finalizado</span>
-                                        @break
-                                    @case('MORA')
-                                        <span class="badge bg-red">En Mora</span>
-                                        @break
-                                @endswitch
+                                    @else
+                                        <span class="badge bg-secondary">{{ $prestamo->estado }}</span>
+                                    @endif
+                                @endif
                             </td>
                             <td>
                                 <div class="btn-action-group">

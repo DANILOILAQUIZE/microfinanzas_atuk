@@ -201,7 +201,7 @@
                     <h5 class="modal-title">Editar Rol</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
                     <div class="mb-3">
                         <label class="form-label required">Nombre del Rol</label>
                         <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
@@ -221,12 +221,12 @@
                             </div>
                         </div>
                         
-                        <div id="permisos-editar-container" style="max-height: 400px; overflow-y: auto;">
+                        <div id="permisos-editar-container">
                             {{-- Se cargará dinámicamente con JavaScript --}}
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="position: sticky; bottom: 0; background: white; z-index: 10;">
                     <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                         Cancelar
                     </button>
@@ -277,14 +277,21 @@ function deseleccionarTodosEditar() {
 
 // Función para cargar datos del rol en el modal de edición
 function editarRol(rolId) {
+    console.log('Editando rol ID:', rolId);
+    
     fetch(`/roles/${rolId}/edit`, {
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
+            
             // Actualizar action del formulario
             document.getElementById('formEditarRol').action = `/roles/${rolId}`;
             
@@ -322,12 +329,15 @@ function editarRol(rolId) {
             
             document.getElementById('permisos-editar-container').innerHTML = permisosHTML;
             
+            console.log('Abriendo modal...');
             // Mostrar modal usando botón trigger
             document.getElementById('triggerModalEditarRol').click();
+            
+            console.log('Modal debería estar visible');
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los datos del rol');
+            console.error('Error completo:', error);
+            alert('Error al cargar los datos del rol: ' + error.message);
         });
 }
 

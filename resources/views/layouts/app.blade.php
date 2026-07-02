@@ -191,6 +191,11 @@
                             </a>
                         </li>
 
+                        @if(auth()->user()->can('ver_socios') || 
+                            auth()->user()->can('ver_cuentas_ahorro') || 
+                            auth()->user()->can('ver_movimientos_ahorro') || 
+                            auth()->user()->can('ver_prestamos') || 
+                            auth()->user()->can('ver_pagos'))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -201,16 +206,31 @@
                             <div class="dropdown-menu">
                                 <div class="dropdown-menu-columns">
                                     <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="{{ route('socios.index') }}">Socios</a>
-                                        <a class="dropdown-item" href="{{ route('cuentas-ahorro.index') }}">Cuentas de Ahorro</a>
-                                        <a class="dropdown-item" href="{{ route('movimientos-ahorro.index') }}">Movimientos de Ahorro</a>
-                                        <a class="dropdown-item" href="{{ route('prestamos.index') }}">Préstamos</a>
-                                        <a class="dropdown-item" href="{{ route('pagos.index') }}">Pagos</a>
+                                        @can('ver_socios')
+                                            <a class="dropdown-item" href="{{ route('socios.index') }}">Socios</a>
+                                        @endcan
+                                        @can('ver_cuentas_ahorro')
+                                            <a class="dropdown-item" href="{{ route('cuentas-ahorro.index') }}">Cuentas de Ahorro</a>
+                                        @endcan
+                                        @can('ver_movimientos_ahorro')
+                                            <a class="dropdown-item" href="{{ route('movimientos-ahorro.index') }}">Movimientos de Ahorro</a>
+                                        @endcan
+                                        @can('ver_prestamos')
+                                            <a class="dropdown-item" href="{{ route('prestamos.index') }}">Préstamos</a>
+                                        @endcan
+                                        @can('ver_pagos')
+                                            <a class="dropdown-item" href="{{ route('pagos.index') }}">Pagos</a>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>
                         </li>
+                        @endif
 
+                        @if(auth()->user()->can('ver_reportes') || 
+                            auth()->user()->can('ver_auditoria') || 
+                            auth()->user()->can('ver_alertas') || 
+                            auth()->user()->can('ver_notificaciones'))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#navbar-extra" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -221,32 +241,56 @@
                             <div class="dropdown-menu">
                                 <div class="dropdown-menu-columns">
                                     <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="{{ route('reportes.index') }}">Reportes</a>
-                                        <a class="dropdown-item" href="{{ route('alertas.index') }}">Alertas de Riesgo</a>
-                                        <a class="dropdown-item" href="{{ route('notificaciones.index') }}">Notificaciones</a>
+                                        @can('ver_reportes')
+                                            <a class="dropdown-item" href="{{ route('reportes.index') }}">Reportes</a>
+                                        @endcan
+                                        @can('ver_auditoria')
+                                            <a class="dropdown-item" href="{{ route('auditoria.index') }}">Auditoría</a>
+                                        @endcan
+                                        @can('ver_alertas')
+                                            <a class="dropdown-item" href="{{ route('alertas.index') }}">Alertas de Riesgo</a>
+                                        @endcan
+                                        @can('ver_notificaciones')
+                                            <a class="dropdown-item" href="{{ route('notificaciones.index') }}">Notificaciones</a>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>
                         </li>
+                        @endif
 
+                        @if(auth()->user()->can('gestionar_usuarios') || 
+                            auth()->user()->can('gestionar_roles') || 
+                            auth()->user()->can('gestionar_parametros') ||
+                            auth()->user()->can('ver_polizas'))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#navbar-layout" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" /></svg>
                                 </span>
-                                <span class="nav-link-title">Administración</span>
+                                <span class="nav-link-title">Configuración</span>
                             </a>
                             <div class="dropdown-menu">
                                 <div class="dropdown-menu-columns">
                                     <div class="dropdown-menu-column">
-                                        <a class="dropdown-item" href="{{ route('usuarios.index') }}">Usuarios</a>
-                                        <a class="dropdown-item" href="{{ route('roles.index') }}">Roles y Permisos</a>
-                                        <a class="dropdown-item" href="{{ route('tipos-prestamo.index') }}">Tipos de Préstamo</a>
-                                        <a class="dropdown-item" href="{{ route('parametros.index') }}">Parámetros</a>
+                                        @can('gestionar_usuarios')
+                                            <a class="dropdown-item" href="{{ route('usuarios.index') }}">Usuarios</a>
+                                        @endcan
+                                        @can('gestionar_roles')
+                                            <a class="dropdown-item" href="{{ route('roles.index') }}">Roles y Permisos</a>
+                                        @endcan
+                                        @can('gestionar_parametros')
+                                            <a class="dropdown-item" href="{{ route('tipos-prestamo.index') }}">Tipos de Préstamo</a>
+                                            <a class="dropdown-item" href="{{ route('parametros.index') }}">Parámetros del Sistema</a>
+                                        @endcan
+                                        @can('ver_polizas')
+                                            <a class="dropdown-item" href="{{ route('polizas.index') }}">Pólizas Contables</a>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>
                         </li>
+                        @endif
                     </ul>
 
                     {{-- Separador visual --}}
@@ -270,7 +314,7 @@
                                     </div>
                                 </div>
                                 <a href="{{ route('logout') }}" 
-                                   onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();"
+                                   onclick="return confirmarCerrarSesion(event);"
                                    class="btn btn-sm btn-light w-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="24" height="24"
                                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
@@ -281,9 +325,6 @@
                                     </svg>
                                     Cerrar sesión
                                 </a>
-                                <form id="logout-form-sidebar" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -375,7 +416,85 @@
         </div>
     </div>
 
+    {{-- Botón trigger invisible para abrir el modal de cerrar sesión --}}
+    <button type="button" id="triggerModalCerrarSesion" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion" style="display:none;"></button>
+
+    {{-- Modal de Confirmación para Cerrar Sesión --}}
+    <div class="modal modal-blur fade" id="modalCerrarSesion" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                        <path d="M9 12h12l-3 -3" />
+                        <path d="M18 15l3 -3" />
+                    </svg>
+                    <h3>¿Cerrar sesión?</h3>
+                    <div class="text-muted">¿Está seguro de que desea cerrar sesión?</div>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <button type="button" class="btn w-100" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-danger w-100" id="btnConfirmarCerrarSesion">
+                                    Cerrar sesión
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Formulario de logout (fuera del sidebar para acceso global) --}}
+    <form id="logout-form-sidebar" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+
     @vite(['node_modules/@tabler/core/dist/js/tabler.min.js', 'resources/js/app.js'])
+    
+    <script>
+        // Confirmación al cerrar sesión con modal de Bootstrap
+        function confirmarCerrarSesion(event) {
+            event.preventDefault();
+            
+            // Abrir el modal usando el atributo data-bs-toggle
+            const modalElement = document.getElementById('modalCerrarSesion');
+            
+            // Método alternativo compatible sin depender del objeto bootstrap
+            if (modalElement) {
+                // Usar el trigger del modal directamente
+                const triggerBtn = document.getElementById('triggerModalCerrarSesion');
+                if (triggerBtn) {
+                    triggerBtn.click();
+                }
+            }
+            
+            return false;
+        }
+        
+        // Event listener para el botón de confirmar dentro del modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnConfirmar = document.getElementById('btnConfirmarCerrarSesion');
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', function() {
+                    const form = document.getElementById('logout-form-sidebar');
+                    if (form) {
+                        form.submit();
+                    }
+                });
+            }
+        });
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

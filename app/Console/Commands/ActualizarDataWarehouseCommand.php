@@ -36,8 +36,13 @@ class ActualizarDataWarehouseCommand extends Command
         Artisan::call('dw:actualizar-morosidad', $params, $this->getOutput());
         $this->newLine();
 
-        // 4. Actualizar KPIs
-        $this->info('4. Actualizando KPIs históricos...');
+        // 4. Actualizar rentabilidad
+        $this->info('4. Actualizando hechos de rentabilidad...');
+        Artisan::call('dw:actualizar-rentabilidad', $params, $this->getOutput());
+        $this->newLine();
+
+        // 5. Actualizar KPIs
+        $this->info('5. Actualizando KPIs históricos...');
         Artisan::call('dw:actualizar-kpis', $params, $this->getOutput());
         $this->newLine();
 

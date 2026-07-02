@@ -49,7 +49,14 @@
                                     <select name="cuenta_id" id="cuenta_id" class="form-select @error('cuenta_id') is-invalid @enderror" required {{ $cuenta ? 'disabled' : '' }}>
                                         <option value="">Seleccione una cuenta...</option>
                                         @if($cuenta)
-                                            <option value="{{ $cuenta->id }}" selected>{{ $cuenta->numero_cuenta }} - {{ $cuenta->socio->nombres }} {{ $cuenta->socio->apellidos }}</option>
+                                            <option value="{{ $cuenta->id }}" 
+                                                    selected 
+                                                    data-saldo="{{ $cuenta->saldo }}"
+                                                    data-saldo-disponible="{{ $cuenta->saldo_disponible }}"
+                                                    data-numero-cuenta="{{ $cuenta->numero_cuenta }}"
+                                                    data-socio="{{ $cuenta->socio->nombres }} {{ $cuenta->socio->apellidos }}">
+                                                {{ $cuenta->numero_cuenta }} - {{ $cuenta->socio->nombres }} {{ $cuenta->socio->apellidos }}
+                                            </option>
                                         @endif
                                     </select>
                                     @if($cuenta)
@@ -198,23 +205,38 @@
 
 @push('scripts')
 <script>
+    // Función para actualizar información de cuenta al seleccionar
+    function actualizarInfoCuenta() {
+        const select = document.getElementById('cuenta_id');
+        const option = select.options[select.selectedIndex];
+        
+        if (option && option.value) {
+            document.getElementById('info_numero_cuenta').textContent = option.dataset.numeroCuenta || '-';
+            document.getElementById('info_socio').textContent = option.dataset.socio || '-';
+            document.getElementById('info_saldo').textContent = '$' + parseFloat(option.dataset.saldo || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('info_saldo_disponible').textContent = '$' + parseFloat(option.dataset.saldoDisponible || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('info_cuenta_card').style.display = 'block';
+        } else {
+            document.getElementById('info_cuenta_card').style.display = 'none';
+        }
+        
+        // También actualizar el hint de monto
+        actualizarHintMonto();
+    }
+
     @if(!$cuenta)
     // Cargar cuentas activas al cargar la página
-    console.log('Cargando cuentas activas...');
     fetch('{{ route('movimientos-ahorro.cuentas-activas') }}')
         .then(response => {
-            console.log('Respuesta recibida:', response.status);
             if (!response.ok) {
                 throw new Error('Error en la respuesta: ' + response.status);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Cuentas recibidas:', data);
             const select = document.getElementById('cuenta_id');
             
             if (data.length === 0) {
-                console.warn('No hay cuentas activas');
                 const option = document.createElement('option');
                 option.value = '';
                 option.textContent = 'No hay cuentas activas disponibles';
@@ -233,26 +255,11 @@
                 option.dataset.socio = `${cuenta.socio.nombres} ${cuenta.socio.apellidos}`;
                 select.appendChild(option);
             });
-            console.log('Cuentas cargadas exitosamente');
         })
         .catch(error => {
             console.error('Error al cargar cuentas:', error);
             alert('Error al cargar las cuentas. Por favor, recarga la página.');
         });
-
-    // Mostrar información de cuenta al seleccionar
-    document.getElementById('cuenta_id').addEventListener('change', function() {
-        const option = this.options[this.selectedIndex];
-        if (option.value) {
-            document.getElementById('info_numero_cuenta').textContent = option.dataset.numeroCuenta;
-            document.getElementById('info_socio').textContent = option.dataset.socio;
-            document.getElementById('info_saldo').textContent = '$' + parseFloat(option.dataset.saldo).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('info_saldo_disponible').textContent = '$' + parseFloat(option.dataset.saldoDisponible).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('info_cuenta_card').style.display = 'block';
-        } else {
-            document.getElementById('info_cuenta_card').style.display = 'none';
-        }
-    });
     @endif
 
     // Validar monto según tipo de movimiento
@@ -263,11 +270,11 @@
 
     function actualizarHintMonto() {
         const cuentaSelect = document.getElementById('cuenta_id');
-        const option = cuentaSelect.options[cuentaSelect.selectedIndex];
+        const selectedOption = cuentaSelect.options[cuentaSelect.selectedIndex];
         
-        if (tipoRetiro.checked && option.value) {
-            const saldoDisponible = parseFloat(option.dataset.saldoDisponible || 0);
-            hintMonto.textContent = `Saldo disponible: $${saldoDisponible.toFixed(2)}`;
+        if (tipoRetiro.checked && selectedOption && selectedOption.value) {
+            const saldoDisponible = parseFloat(selectedOption.dataset.saldoDisponible || 0);
+            hintMonto.textContent = `Saldo disponible: $${saldoDisponible.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             hintMonto.className = 'form-hint text-warning';
         } else {
             hintMonto.textContent = '';
@@ -276,6 +283,8 @@
 
     tipoDeposito.addEventListener('change', actualizarHintMonto);
     tipoRetiro.addEventListener('change', actualizarHintMonto);
-    document.getElementById('cuenta_id').addEventListener('change', actualizarHintMonto);
+    
+    // Event listener único para cambio de cuenta
+    document.getElementById('cuenta_id').addEventListener('change', actualizarInfoCuenta);
 </script>
 @endpush

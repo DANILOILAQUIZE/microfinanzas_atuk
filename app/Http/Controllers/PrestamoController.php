@@ -17,7 +17,7 @@ class PrestamoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Prestamo::with(['socio', 'tipoPrestamo', 'usuario', 'usuarioAprobador']);
+        $query = Prestamo::with(['socio', 'tipoPrestamo', 'usuario', 'usuarioAprobador', 'cuotas']);
 
         // Filtro por estado de aprobación
         if ($request->filled('estado_aprobacion')) {
@@ -47,8 +47,14 @@ class PrestamoController extends Controller
         $prestamos = $query->orderBy('created_at', 'desc')->paginate(15);
         $tiposPrestamo = TipoPrestamo::where('estado', 'ACTIVO')->get();
         $socios = Socio::where('estado', 'ACTIVO')->get();
+        
+        // Contar préstamos vencidos para el badge
+        $totalVencidos = Prestamo::where('estado', 'VENCIDO')
+            ->orWhereHas('cuotas', function($q) {
+                $q->where('estado', 'VENCIDA');
+            })->count();
 
-        return view('prestamos.index', compact('prestamos', 'tiposPrestamo', 'socios'));
+        return view('prestamos.index', compact('prestamos', 'tiposPrestamo', 'socios', 'totalVencidos'));
     }
 
     /**
@@ -233,16 +239,16 @@ class PrestamoController extends Controller
         $montoCuota = $prestamo->monto_cuota;
         
         // Calcular el monto de capital e interés por cuota
-        // En un sistema de cuota fija, el interés se distribuye proporcionalmente
         $interesTotal = $prestamo->monto_total - $prestamo->monto;
-        $interesPorCuota = $interesTotal / $numeroCuotas;
-        $capitalPorCuota = $prestamo->monto / $numeroCuotas;
+        $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
+        $capitalPorCuota = round($prestamo->monto / $numeroCuotas, 2);
         
         $saldoPendiente = $montoTotal;
+        $capitalAcumulado = 0; // Para controlar el redondeo
         
         // Convertir fecha a objeto Carbon y día a entero
         $fechaVencimiento = \Carbon\Carbon::parse($fechaPrimerPago);
-        $diaVencimiento = (int) $diaVencimiento; // Convertir a entero
+        $diaVencimiento = (int) $diaVencimiento;
         
         for ($i = 1; $i <= $numeroCuotas; $i++) {
             // Para la primera cuota, usar la fecha exacta ingresada
@@ -251,32 +257,36 @@ class PrestamoController extends Controller
                 $fechaVencimiento->addMonth();
                 
                 // Ajustar al día de vencimiento especificado
-                // Si el mes no tiene ese día (ej: 31 en febrero), usar el último día del mes
                 $ultimoDiaMes = $fechaVencimiento->daysInMonth;
                 $diaAjustado = min($diaVencimiento, $ultimoDiaMes);
                 $fechaVencimiento->day = $diaAjustado;
             }
             
-            // Para la última cuota, ajustar el monto para evitar errores de redondeo
+            // Para la última cuota, ajustar montos para evitar errores de redondeo
             if ($i === $numeroCuotas) {
                 $montoCuotaActual = $saldoPendiente;
+                $capitalActual = $prestamo->monto - $capitalAcumulado; // Capital que falta
+                $interesActual = $montoCuotaActual - $capitalActual;
             } else {
                 $montoCuotaActual = round($montoCuota, 2);
+                $capitalActual = $capitalPorCuota;
+                $interesActual = $interesPorCuota;
             }
             
             \App\Models\Cuota::create([
                 'prestamo_id' => $prestamo->id,
                 'numero_cuota' => $i,
                 'fecha_vencimiento' => $fechaVencimiento->format('Y-m-d'),
-                'monto' => $montoCuotaActual,
-                'capital' => round($capitalPorCuota, 2),
-                'interes' => round($interesPorCuota, 2),
+                'monto' => round($montoCuotaActual, 2),
+                'capital' => round($capitalActual, 2),
+                'interes' => round($interesActual, 2),
                 'mora' => 0,
-                'saldo_pendiente' => $saldoPendiente,
+                'saldo_pendiente' => round($saldoPendiente, 2),
                 'estado' => 'PENDIENTE',
             ]);
             
             $saldoPendiente -= $montoCuotaActual;
+            $capitalAcumulado += $capitalActual;
         }
     }
 

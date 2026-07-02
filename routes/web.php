@@ -118,20 +118,20 @@ Route::middleware(['auth'])->group(function () {
     });
     
     // Movimientos de Ahorro - Admin, Gerente y Cajero
-    Route::middleware(['permission:ver_socios'])->group(function () {
+    Route::middleware(['permission:ver_movimientos_ahorro'])->group(function () {
         Route::get('/movimientos-ahorro', [\App\Http\Controllers\MovimientoAhorroController::class, 'index'])->name('movimientos-ahorro.index');
-        Route::get('/movimientos-ahorro/crear/{cuenta?}', [\App\Http\Controllers\MovimientoAhorroController::class, 'crear'])->name('movimientos-ahorro.crear');
-        Route::get('/movimientos-ahorro/cuentas-activas', [\App\Http\Controllers\MovimientoAhorroController::class, 'getCuentasActivas'])->name('movimientos-ahorro.cuentas-activas');
         Route::get('/movimientos-ahorro/{movimientoAhorro}', [\App\Http\Controllers\MovimientoAhorroController::class, 'show'])->name('movimientos-ahorro.show');
     });
     
-    Route::middleware(['permission:crear_socios'])->group(function () {
+    Route::middleware(['permission:gestionar_movimientos'])->group(function () {
+        Route::get('/movimientos-ahorro/crear/{cuenta?}', [\App\Http\Controllers\MovimientoAhorroController::class, 'crear'])->name('movimientos-ahorro.crear');
+        Route::get('/movimientos-ahorro/cuentas-activas', [\App\Http\Controllers\MovimientoAhorroController::class, 'getCuentasActivas'])->name('movimientos-ahorro.cuentas-activas');
         Route::post('/movimientos-ahorro', [\App\Http\Controllers\MovimientoAhorroController::class, 'store'])->name('movimientos-ahorro.store');
         Route::delete('/movimientos-ahorro/{movimientoAhorro}/anular', [\App\Http\Controllers\MovimientoAhorroController::class, 'anular'])->name('movimientos-ahorro.anular');
     });
     
     // Alertas de Riesgo - Admin y Gerente
-    Route::middleware(['permission:ver_reportes'])->group(function () {
+    Route::middleware(['permission:ver_alertas'])->group(function () {
         Route::get('/alertas', [\App\Http\Controllers\AlertaRiesgoController::class, 'index'])->name('alertas.index');
         Route::get('/alertas/{alerta}', [\App\Http\Controllers\AlertaRiesgoController::class, 'show'])->name('alertas.show');
         Route::put('/alertas/{alerta}/marcar-leida', [\App\Http\Controllers\AlertaRiesgoController::class, 'marcarLeida'])->name('alertas.marcar-leida');
@@ -141,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
     });
     
     // Notificaciones - Admin y Gerente
-    Route::middleware(['permission:ver_reportes'])->group(function () {
+    Route::middleware(['permission:ver_notificaciones'])->group(function () {
         Route::get('/notificaciones', [\App\Http\Controllers\NotificacionController::class, 'index'])->name('notificaciones.index');
         Route::get('/notificaciones/{notificacion}', [\App\Http\Controllers\NotificacionController::class, 'show'])->name('notificaciones.show');
         Route::put('/notificaciones/{notificacion}/marcar-leida', [\App\Http\Controllers\NotificacionController::class, 'marcarLeida'])->name('notificaciones.marcar-leida');
@@ -161,3 +161,29 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
+
+// Auditoría - Admin y Gerente (parte de BI)
+Route::middleware(['auth', 'permission:ver_auditoria'])->group(function () {
+    Route::get('/auditoria', [\App\Http\Controllers\AuditoriaController::class, 'index'])->name('auditoria.index');
+    Route::get('/auditoria/{auditoria}', [\App\Http\Controllers\AuditoriaController::class, 'show'])->name('auditoria.show');
+});
+
+// Pólizas Contables - Admin (configuración)
+Route::middleware(['auth', 'permission:ver_polizas'])->group(function () {
+    Route::get('/polizas', [\App\Http\Controllers\PolizaController::class, 'index'])->name('polizas.index');
+    Route::get('/polizas/{poliza}', [\App\Http\Controllers\PolizaController::class, 'show'])->name('polizas.show');
+});
+
+Route::middleware(['auth', 'permission:crear_polizas'])->group(function () {
+    Route::get('/polizas/create', [\App\Http\Controllers\PolizaController::class, 'create'])->name('polizas.create');
+    Route::post('/polizas', [\App\Http\Controllers\PolizaController::class, 'store'])->name('polizas.store');
+});
+
+Route::middleware(['auth', 'permission:editar_polizas'])->group(function () {
+    Route::get('/polizas/{poliza}/edit', [\App\Http\Controllers\PolizaController::class, 'edit'])->name('polizas.edit');
+    Route::put('/polizas/{poliza}', [\App\Http\Controllers\PolizaController::class, 'update'])->name('polizas.update');
+});
+
+Route::middleware(['auth', 'permission:eliminar_polizas'])->group(function () {
+    Route::delete('/polizas/{poliza}', [\App\Http\Controllers\PolizaController::class, 'destroy'])->name('polizas.destroy');
+});

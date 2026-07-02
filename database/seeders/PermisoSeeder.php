@@ -35,10 +35,12 @@ class PermisoSeeder extends Seeder
             // Cuentas de Ahorro
             ['nombre' => 'Ver cuentas ahorro', 'slug' => 'ver_cuentas_ahorro', 'modulo' => 'Cuentas Ahorro', 'descripcion' => 'Ver cuentas de ahorro'],
             ['nombre' => 'Crear cuentas ahorro', 'slug' => 'crear_cuentas_ahorro', 'modulo' => 'Cuentas Ahorro', 'descripcion' => 'Abrir cuentas de ahorro'],
+            ['nombre' => 'Ver movimientos ahorro', 'slug' => 'ver_movimientos_ahorro', 'modulo' => 'Cuentas Ahorro', 'descripcion' => 'Ver movimientos de ahorro'],
             ['nombre' => 'Gestionar movimientos', 'slug' => 'gestionar_movimientos', 'modulo' => 'Cuentas Ahorro', 'descripcion' => 'Realizar depósitos y retiros'],
             
             // Usuarios
             ['nombre' => 'Ver usuarios', 'slug' => 'ver_usuarios', 'modulo' => 'Usuarios', 'descripcion' => 'Ver listado de usuarios'],
+            ['nombre' => 'Gestionar usuarios', 'slug' => 'gestionar_usuarios', 'modulo' => 'Usuarios', 'descripcion' => 'Crear, editar y eliminar usuarios'],
             ['nombre' => 'Crear usuarios', 'slug' => 'crear_usuarios', 'modulo' => 'Usuarios', 'descripcion' => 'Crear nuevos usuarios'],
             ['nombre' => 'Editar usuarios', 'slug' => 'editar_usuarios', 'modulo' => 'Usuarios', 'descripcion' => 'Editar información de usuarios'],
             ['nombre' => 'Eliminar usuarios', 'slug' => 'eliminar_usuarios', 'modulo' => 'Usuarios', 'descripcion' => 'Eliminar usuarios'],
@@ -55,6 +57,16 @@ class PermisoSeeder extends Seeder
             
             // Auditoría
             ['nombre' => 'Ver auditoría', 'slug' => 'ver_auditoria', 'modulo' => 'Auditoría', 'descripcion' => 'Ver logs de auditoría'],
+            
+            // Alertas y Notificaciones
+            ['nombre' => 'Ver alertas', 'slug' => 'ver_alertas', 'modulo' => 'Alertas', 'descripcion' => 'Ver alertas de riesgo'],
+            ['nombre' => 'Ver notificaciones', 'slug' => 'ver_notificaciones', 'modulo' => 'Notificaciones', 'descripcion' => 'Ver notificaciones del sistema'],
+            
+            // Pólizas
+            ['nombre' => 'Ver pólizas', 'slug' => 'ver_polizas', 'modulo' => 'Pólizas', 'descripcion' => 'Ver pólizas contables'],
+            ['nombre' => 'Crear pólizas', 'slug' => 'crear_polizas', 'modulo' => 'Pólizas', 'descripcion' => 'Crear pólizas contables'],
+            ['nombre' => 'Editar pólizas', 'slug' => 'editar_polizas', 'modulo' => 'Pólizas', 'descripcion' => 'Editar pólizas contables'],
+            ['nombre' => 'Eliminar pólizas', 'slug' => 'eliminar_polizas', 'modulo' => 'Pólizas', 'descripcion' => 'Eliminar pólizas contables'],
         ];
 
         // Crear los permisos
@@ -85,8 +97,9 @@ class PermisoSeeder extends Seeder
                 'ver_socios', 'crear_socios', 'editar_socios',
                 'ver_prestamos', 'crear_prestamos', 'aprobar_prestamos', 'editar_prestamos',
                 'ver_pagos', 'registrar_pagos',
-                'ver_cuentas_ahorro', 'crear_cuentas_ahorro', 'gestionar_movimientos',
+                'ver_cuentas_ahorro', 'crear_cuentas_ahorro', 'ver_movimientos_ahorro', 'gestionar_movimientos',
                 'ver_reportes', 'exportar_reportes',
+                'ver_auditoria', 'ver_alertas', 'ver_notificaciones',
                 'ver_usuarios', // puede ver pero no modificar
             ])->pluck('id');
             $gerente->permisos()->sync($permisosGerente);
@@ -99,7 +112,7 @@ class PermisoSeeder extends Seeder
                 'ver_socios', 'crear_socios',
                 'ver_prestamos', 'crear_prestamos',
                 'ver_pagos', 'registrar_pagos',
-                'ver_cuentas_ahorro', 'crear_cuentas_ahorro', 'gestionar_movimientos',
+                'ver_cuentas_ahorro', 'crear_cuentas_ahorro', 'ver_movimientos_ahorro', 'gestionar_movimientos',
             ])->pluck('id');
             $cajero->permisos()->sync($permisosCajero);
         }

@@ -44,13 +44,25 @@ class DetectarMoraCommand extends Command
         $fechaLimite = Carbon::now()->subDays($diasGracia);
         
         // Obtener cuotas pendientes que han vencido (considerando días de gracia)
+        // O cuotas ya marcadas como VENCIDA que no tienen mora calculada
         $cuotasVencidas = Cuota::with(['prestamo'])
-            ->where('estado', 'PENDIENTE')
-            ->whereDate('fecha_vencimiento', '<', $fechaLimite)
+            ->where(function ($query) use ($fechaLimite) {
+                // Cuotas pendientes que vencieron
+                $query->where('estado', 'PENDIENTE')
+                    ->whereDate('fecha_vencimiento', '<', $fechaLimite);
+            })
+            ->orWhere(function ($query) {
+                // Cuotas marcadas como vencidas sin mora calculada
+                $query->where('estado', 'VENCIDA')
+                    ->where(function ($q) {
+                        $q->whereNull('mora')
+                          ->orWhere('mora', '<=', 0);
+                    });
+            })
             ->get();
         
         $totalCuotas = $cuotasVencidas->count();
-        $this->info("Se encontraron {$totalCuotas} cuotas vencidas");
+        $this->info("Se encontraron {$totalCuotas} cuotas para procesar");
         
         if ($totalCuotas === 0) {
             $this->info('No hay cuotas en mora');
@@ -63,8 +75,14 @@ class DetectarMoraCommand extends Command
         DB::beginTransaction();
         try {
             foreach ($cuotasVencidas as $cuota) {
-                // Calcular días de mora (sin incluir días de gracia)
-                $diasMora = Carbon::parse($cuota->fecha_vencimiento)->diffInDays(Carbon::now()) - $diasGracia;
+                // Calcular días de mora desde la fecha de vencimiento
+                $fechaVencimiento = Carbon::parse($cuota->fecha_vencimiento);
+                $diasDesdeVencimiento = $fechaVencimiento->diffInDays(Carbon::now());
+                
+                // Aplicar días de gracia solo si la cuota estaba PENDIENTE
+                $diasMora = ($cuota->estado === 'PENDIENTE' && $diasDesdeVencimiento > $diasGracia) 
+                    ? $diasDesdeVencimiento - $diasGracia 
+                    : $diasDesdeVencimiento;
                 
                 if ($diasMora > 0) {
                     // Calcular mora

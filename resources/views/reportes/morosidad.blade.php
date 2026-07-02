@@ -53,6 +53,9 @@
                     <div class="card-body">
                         <div class="subheader">Índice de Morosidad</div>
                         <div class="h1 mb-0 text-danger">{{ number_format($stats['indice_morosidad'], 2) }}%</div>
+                        <div class="text-muted mt-1">
+                            <small>{{ $stats['cuotas_vencidas'] }} de {{ $stats['cuotas_pendientes'] }} cuotas</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -61,6 +64,9 @@
                     <div class="card-body">
                         <div class="subheader">Cartera Vencida</div>
                         <div class="h1 mb-0">${{ number_format($stats['cartera_vencida'], 2) }}</div>
+                        <div class="text-muted mt-1">
+                            <small>{{ number_format(($stats['cartera_total'] > 0 ? ($stats['cartera_vencida'] / $stats['cartera_total']) * 100 : 0), 2) }}% del total</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -69,14 +75,20 @@
                     <div class="card-body">
                         <div class="subheader">Préstamos Vencidos</div>
                         <div class="h1 mb-0">{{ $stats['prestamos_vencidos'] }}</div>
+                        <div class="text-muted mt-1">
+                            <small>En estado VENCIDO</small>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-lg-3">
                 <div class="card">
                     <div class="card-body">
-                        <div class="subheader">Mora Promedio (días)</div>
-                        <div class="h1 mb-0">{{ round($stats['mora_promedio']) }}</div>
+                        <div class="subheader">Monto de Mora Total</div>
+                        <div class="h1 mb-0 text-danger">${{ number_format($stats['monto_mora_total'], 2) }}</div>
+                        <div class="text-muted mt-1">
+                            <small>Mora acumulada</small>
+                        </div>
                     </div>
                 </div>
             </div>

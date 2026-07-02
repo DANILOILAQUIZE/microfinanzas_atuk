@@ -75,24 +75,68 @@
                                 <label class="form-label required">Seleccione la Cuota</label>
                                 <select name="cuota_id" id="cuota_id" class="form-select" required>
                                     <option value="">Seleccione una cuota...</option>
-                                    @foreach($prestamo->cuotas as $cuota)
+                                    @foreach($prestamo->cuotas->whereIn('estado', ['PENDIENTE', 'VENCIDA']) as $cuota)
                                         <option value="{{ $cuota->id }}" 
+                                                data-capital="{{ $cuota->capital }}"
+                                                data-interes="{{ $cuota->interes }}"
+                                                data-mora="{{ $cuota->mora }}"
                                                 data-monto="{{ $cuota->monto }}"
-                                                data-vencimiento="{{ $cuota->fecha_vencimiento->format('d/m/Y') }}">
+                                                data-total="{{ $cuota->monto + $cuota->mora }}"
+                                                data-vencimiento="{{ $cuota->fecha_vencimiento->format('d/m/Y') }}"
+                                                data-estado="{{ $cuota->estado }}">
                                             Cuota #{{ $cuota->numero_cuota }} - 
                                             Vence: {{ $cuota->fecha_vencimiento->format('d/m/Y') }} - 
                                             ${{ number_format($cuota->monto, 2) }}
-                                            @if($cuota->fecha_vencimiento->isPast())
+                                            @if($cuota->mora > 0)
+                                                + Mora: ${{ number_format($cuota->mora, 2) }}
+                                            @endif
+                                            @if($cuota->estado === 'VENCIDA')
                                                 <span class="text-danger">(VENCIDA)</span>
                                             @endif
                                         </option>
                                     @endforeach
                                 </select>
-                                @if($prestamo->cuotas->count() === 0)
+                                @if($prestamo->cuotas->whereIn('estado', ['PENDIENTE', 'VENCIDA'])->count() === 0)
                                     <div class="text-muted mt-2">
                                         No hay cuotas pendientes para este préstamo
                                     </div>
                                 @endif
+                            </div>
+
+                            <div id="detallesCuota" style="display: none;" class="alert alert-info mb-3">
+                                <h4 class="alert-title">Detalles del Pago</h4>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Fecha vencimiento:</strong><br>
+                                        <span id="detalle_vencimiento"></span>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Estado:</strong><br>
+                                        <span id="detalle_estado"></span>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <strong>Capital:</strong><br>
+                                        $<span id="detalle_capital">0.00</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Interés:</strong><br>
+                                        $<span id="detalle_interes">0.00</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Mora:</strong><br>
+                                        <span class="text-danger">$<span id="detalle_mora">0.00</span></span>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>TOTAL A PAGAR:</strong><br>
+                                        <span class="h3 text-success">$<span id="detalle_total">0.00</span></span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -101,9 +145,9 @@
                                         <label class="form-label required">Monto a Pagar</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" name="monto" id="monto" class="form-control" step="0.01" min="0" value="{{ old('monto') }}" required readonly>
+                                            <input type="number" name="monto" id="monto" class="form-control bg-success-lt" step="0.01" min="0" value="{{ old('monto') }}" required readonly>
                                         </div>
-                                        <small class="form-hint">El monto debe ser exactamente el valor de la cuota</small>
+                                        <small class="form-hint">Monto total incluyendo mora (si aplica). Calculado automáticamente.</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -162,7 +206,7 @@
                 </div>
 
                 <!-- Tabla de cuotas pendientes -->
-                @if($prestamo->cuotas->count() > 0)
+                @if($prestamo->cuotas->whereIn('estado', ['PENDIENTE', 'VENCIDA'])->count() > 0)
                     <div class="card mt-3">
                         <div class="card-header">
                             <h3 class="card-title">Cuotas Pendientes</h3>
@@ -173,19 +217,34 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Vencimiento</th>
-                                        <th>Monto</th>
+                                        <th>Capital</th>
+                                        <th>Interés</th>
+                                        <th>Mora</th>
+                                        <th>Total</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($prestamo->cuotas as $cuota)
-                                        <tr>
-                                            <td>{{ $cuota->numero_cuota }}</td>
+                                    @foreach($prestamo->cuotas->whereIn('estado', ['PENDIENTE', 'VENCIDA']) as $cuota)
+                                        <tr class="{{ $cuota->estado === 'VENCIDA' ? 'table-danger' : '' }}">
+                                            <td><strong>{{ $cuota->numero_cuota }}</strong></td>
                                             <td>{{ $cuota->fecha_vencimiento->format('d/m/Y') }}</td>
-                                            <td>${{ number_format($cuota->monto, 2) }}</td>
+                                            <td>${{ number_format($cuota->capital, 2) }}</td>
+                                            <td>${{ number_format($cuota->interes, 2) }}</td>
                                             <td>
-                                                @if($cuota->fecha_vencimiento->isPast())
-                                                    <span class="badge bg-danger">Vencida</span>
+                                                @if($cuota->mora > 0)
+                                                    <span class="text-danger fw-bold">${{ number_format($cuota->mora, 2) }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td><strong>${{ number_format($cuota->monto + $cuota->mora, 2) }}</strong></td>
+                                            <td>
+                                                @if($cuota->estado === 'VENCIDA')
+                                                    @php
+                                                        $diasVencidos = $cuota->fecha_vencimiento->diffInDays(now());
+                                                    @endphp
+                                                    <span class="badge bg-danger">Vencida ({{ $diasVencidos }} días)</span>
                                                 @else
                                                     <span class="badge bg-warning">Pendiente</span>
                                                 @endif
@@ -205,8 +264,43 @@
 <script>
     document.getElementById('cuota_id').addEventListener('change', function() {
         var selected = this.options[this.selectedIndex];
-        var monto = selected.getAttribute('data-monto');
-        document.getElementById('monto').value = monto;
+        
+        if (selected.value) {
+            // Obtener datos de la cuota
+            var capital = parseFloat(selected.getAttribute('data-capital'));
+            var interes = parseFloat(selected.getAttribute('data-interes'));
+            var mora = parseFloat(selected.getAttribute('data-mora'));
+            var monto = parseFloat(selected.getAttribute('data-monto'));
+            var vencimiento = selected.getAttribute('data-vencimiento');
+            var estado = selected.getAttribute('data-estado');
+            
+            // Calcular total con precisión
+            var total = Math.round((monto + mora) * 100) / 100;
+            
+            // Actualizar el monto a pagar
+            document.getElementById('monto').value = total.toFixed(2);
+            
+            // Mostrar detalles
+            document.getElementById('detalle_capital').textContent = capital.toFixed(2);
+            document.getElementById('detalle_interes').textContent = interes.toFixed(2);
+            document.getElementById('detalle_mora').textContent = mora.toFixed(2);
+            document.getElementById('detalle_total').textContent = total.toFixed(2);
+            document.getElementById('detalle_vencimiento').textContent = vencimiento;
+            
+            // Mostrar estado con badge
+            if (estado === 'VENCIDA') {
+                document.getElementById('detalle_estado').innerHTML = '<span class="badge bg-danger">VENCIDA</span>';
+            } else {
+                document.getElementById('detalle_estado').innerHTML = '<span class="badge bg-warning">PENDIENTE</span>';
+            }
+            
+            // Mostrar el panel de detalles
+            document.getElementById('detallesCuota').style.display = 'block';
+        } else {
+            // Ocultar detalles si no hay selección
+            document.getElementById('detallesCuota').style.display = 'none';
+            document.getElementById('monto').value = '';
+        }
     });
 </script>
 @endsection

@@ -84,10 +84,19 @@ class PagoController extends Controller
             return back()->with('error', 'Esta cuota ya ha sido pagada');
         }
 
-        // Validar el monto (debe ser exactamente el monto de la cuota)
-        if ($request->monto != $cuota->monto) {
+        // Validar el monto (debe ser el monto de la cuota + mora si aplica)
+        $montoEsperado = $cuota->monto + $cuota->mora;
+        $diferencia = abs($request->monto - $montoEsperado);
+        
+        // Permitir una diferencia de hasta 0.02 por redondeo
+        if ($diferencia > 0.02) {
+            $errorMsg = 'El monto debe ser exactamente $' . number_format($montoEsperado, 2);
+            if ($cuota->mora > 0) {
+                $errorMsg .= ' (Cuota: $' . number_format($cuota->monto, 2) . ' + Mora: $' . number_format($cuota->mora, 2) . ')';
+            }
+            $errorMsg .= '. Recibido: $' . number_format($request->monto, 2);
             return back()->withErrors([
-                'monto' => 'El monto debe ser exactamente $' . number_format($cuota->monto, 2)
+                'monto' => $errorMsg
             ])->withInput();
         }
 
@@ -106,16 +115,34 @@ class PagoController extends Controller
             $cuota->update([
                 'estado' => 'PAGADA',
                 'fecha_pago' => $request->fecha_pago,
+                'mora' => 0, // Resetear mora después de pagar
             ]);
 
-            // Actualizar el saldo del préstamo
+            // Actualizar el saldo del préstamo (restar solo el capital de la cuota, no la mora ni intereses)
             $prestamo = $cuota->prestamo;
-            $nuevoSaldo = $prestamo->saldo - $request->monto;
+            $nuevoSaldo = $prestamo->saldo - $cuota->capital;
+            
+            // Redondear el saldo para evitar problemas de decimales
+            $nuevoSaldo = round($nuevoSaldo, 2);
+            
             $prestamo->update(['saldo' => $nuevoSaldo]);
 
-            // Si el saldo llegó a 0, marcar el préstamo como CANCELADO
-            if ($nuevoSaldo <= 0) {
-                $prestamo->update(['estado' => 'CANCELADO']);
+            // Si el saldo llegó a 0 o es negativo, marcar el préstamo como CANCELADO
+            if ($nuevoSaldo <= 0.01) { // Tolerancia de 1 centavo
+                $prestamo->update([
+                    'estado' => 'CANCELADO',
+                    'saldo' => 0 // Forzar a 0 exacto
+                ]);
+            } else {
+                // Si aún hay saldo pero no hay cuotas vencidas, cambiar a ACTIVO
+                $cuotasVencidas = $prestamo->cuotas()
+                    ->where('estado', 'VENCIDA')
+                    ->where('id', '!=', $cuota->id) // Excluir la cuota que acabamos de pagar
+                    ->count();
+                
+                if ($cuotasVencidas == 0 && $prestamo->estado == 'VENCIDO') {
+                    $prestamo->update(['estado' => 'ACTIVO']);
+                }
             }
 
             DB::commit();

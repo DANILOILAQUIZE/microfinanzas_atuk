@@ -17,7 +17,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
                     Volver
                 </a>
-                @if($prestamo->estado_aprobacion === 'APROBADO' && $prestamo->estado === 'ACTIVO')
+                @if($prestamo->estado_aprobacion === 'APROBADO' && in_array($prestamo->estado, ['ACTIVO', 'VENCIDO']))
                     @can('registrar_pagos')
                         <a href="{{ route('pagos.registrar', $prestamo->id) }}" class="btn btn-success">
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="7" y="9" width="14" height="10" rx="2" /><circle cx="14" cy="14" r="2" /><path d="M17 9v-2a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2v6a2 2 0 0 0 2 2h2" /></svg>
@@ -181,37 +181,74 @@
                             <h3 class="card-title">Plan de Pagos</h3>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-vcenter card-table">
+                            <table class="table table-vcenter card-table table-hover">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Fecha Vencimiento</th>
-                                        <th>Monto</th>
+                                        <th>Capital</th>
+                                        <th>Interés</th>
+                                        <th>Mora</th>
+                                        <th>Total</th>
                                         <th>Estado</th>
                                         <th>Fecha Pago</th>
+                                        <th class="w-1">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($prestamo->cuotas as $cuota)
-                                        <tr>
-                                            <td>{{ $cuota->numero_cuota }}</td>
+                                        <tr class="{{ $cuota->estado === 'VENCIDA' ? 'table-danger' : '' }}">
+                                            <td><strong>{{ $cuota->numero_cuota }}</strong></td>
                                             <td>{{ $cuota->fecha_vencimiento->format('d/m/Y') }}</td>
-                                            <td>${{ number_format($cuota->monto, 2) }}</td>
+                                            <td>${{ number_format($cuota->capital, 2) }}</td>
+                                            <td>${{ number_format($cuota->interes, 2) }}</td>
+                                            <td>
+                                                @if($cuota->mora > 0)
+                                                    <span class="text-danger fw-bold">${{ number_format($cuota->mora, 2) }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <strong>${{ number_format($cuota->monto + $cuota->mora, 2) }}</strong>
+                                            </td>
                                             <td>
                                                 @if($cuota->estado === 'PENDIENTE')
                                                     <span class="badge bg-warning">Pendiente</span>
                                                 @elseif($cuota->estado === 'PAGADA')
                                                     <span class="badge bg-success">Pagada</span>
                                                 @elseif($cuota->estado === 'VENCIDA')
-                                                    <span class="badge bg-danger">Vencida</span>
+                                                    @php
+                                                        $diasVencidos = $cuota->fecha_vencimiento->diffInDays(now());
+                                                    @endphp
+                                                    <span class="badge bg-danger">Vencida ({{ $diasVencidos }} días)</span>
                                                 @endif
                                             </td>
                                             <td>
                                                 {{ $cuota->fecha_pago ? $cuota->fecha_pago->format('d/m/Y') : '-' }}
                                             </td>
+                                            <td>
+                                                @if(in_array($cuota->estado, ['PENDIENTE', 'VENCIDA']))
+                                                    @can('registrar_pagos')
+                                                        <a href="{{ route('pagos.registrar', $prestamo->id) }}?cuota={{ $cuota->id }}" class="btn btn-sm btn-success" title="Pagar esta cuota">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                                        </a>
+                                                    @endcan
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td colspan="2" class="text-end">TOTALES:</td>
+                                        <td>${{ number_format($prestamo->cuotas->sum('capital'), 2) }}</td>
+                                        <td>${{ number_format($prestamo->cuotas->sum('interes'), 2) }}</td>
+                                        <td class="text-danger">${{ number_format($prestamo->cuotas->sum('mora'), 2) }}</td>
+                                        <td>${{ number_format($prestamo->cuotas->sum('monto') + $prestamo->cuotas->sum('mora'), 2) }}</td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
