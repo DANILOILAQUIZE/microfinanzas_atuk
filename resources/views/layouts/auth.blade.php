@@ -5,42 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Acceso') — Caja de Ahorro ATUK</title>
+    <title>@yield('title', 'Acceso') — ATUK Institución Financiera</title>
 
     @vite(['node_modules/@tabler/core/dist/css/tabler.min.css', 'resources/css/app.css'])
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #2E5AAC 0%, #1a3d7a 50%, #0d2d5e 100%);
+            min-height: 100vh;
+        }
+
+        .page-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .container-tight {
+            max-width: 480px;
+            width: 100%;
+        }
+    </style>
+    
+    @stack('styles')
 </head>
-<body class="antialiased d-flex flex-column">
+<body>
     <div class="page page-center">
         <div class="container container-tight py-4">
-
-            {{-- Logo --}}
-            <div class="text-center mb-4">
-                <a href="/" class="navbar-brand navbar-brand-autodark">
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round" class="text-primary">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M3 21l18 0"/>
-                            <path d="M3 10l18 0"/>
-                            <path d="M5 6l7 -3l7 3"/>
-                            <path d="M4 10l0 11"/>
-                            <path d="M20 10l0 11"/>
-                            <path d="M8 14l0 3"/>
-                            <path d="M12 14l0 3"/>
-                            <path d="M16 14l0 3"/>
-                        </svg>
-                        <span class="h2 mb-0 fw-bold text-primary">ATUK</span>
-                    </div>
-                    <div class="text-muted mt-1">Caja de Ahorro</div>
-                </a>
-            </div>
-
             @yield('content')
-
         </div>
     </div>
 
-    @vite(['node_modules/@tabler/core/dist/js/tabler.min.js'])
+    @vite(['node_modules/@tabler/core/dist/js/tabler.min.js', 'resources/js/app.js'])
+    @stack('scripts')
 </body>
 </html>

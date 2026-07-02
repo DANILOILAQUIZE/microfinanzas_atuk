@@ -51,7 +51,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Buscar</label>
-                        <input type="text" name="buscar" class="form-control" placeholder="Número de cuenta, nombre o DUI del socio..." value="{{ request('buscar') }}">
+                        <input type="text" name="buscar" class="form-control" placeholder="Número de cuenta, nombre o cédula del socio..." value="{{ request('buscar') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
@@ -74,7 +74,7 @@
                         <tr>
                             <th>Nº Cuenta</th>
                             <th>Socio</th>
-                            <th>DUI</th>
+                            <th>Cédula</th>
                             <th>Fecha Apertura</th>
                             <th>Depósito Inicial</th>
                             <th>Saldo Actual</th>
@@ -91,7 +91,7 @@
                             <td>
                                 {{ $cuenta->socio->nombres }} {{ $cuenta->socio->apellidos }}
                             </td>
-                            <td>{{ $cuenta->socio->dui }}</td>
+                            <td>{{ $cuenta->socio->cedula }}</td>
                             <td>{{ $cuenta->fecha_apertura->format('d/m/Y') }}</td>
                             <td>${{ number_format($cuenta->deposito_inicial, 2) }}</td>
                             <td>
@@ -254,7 +254,7 @@
                 data.forEach(socio => {
                     const option = document.createElement('option');
                     option.value = socio.id;
-                    option.textContent = `${socio.nombres} ${socio.apellidos} - ${socio.dui}`;
+                    option.textContent = `${socio.nombres} ${socio.apellidos} - ${socio.cedula}`;
                     select.appendChild(option);
                 });
             });

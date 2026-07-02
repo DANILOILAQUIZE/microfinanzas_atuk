@@ -11,12 +11,12 @@ class PrestamoObserver
     {
         AuditoriaLog::create([
             'usuario_id' => auth()->id(),
-            'entidad' => 'Prestamo',
-            'entidad_id' => $prestamo->id,
+            'tabla' => 'prestamos',
+            'registro_id' => $prestamo->id,
             'accion' => 'CREAR',
-            'valores_anteriores' => null,
+            'valores_antiguos' => null,
             'valores_nuevos' => $prestamo->toJson(),
-            'ip' => request()->ip(),
+            'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
     }
@@ -30,12 +30,12 @@ class PrestamoObserver
         if (count(array_intersect(array_keys($cambios), $cambiosImportantes)) > 0) {
             AuditoriaLog::create([
                 'usuario_id' => auth()->id(),
-                'entidad' => 'Prestamo',
-                'entidad_id' => $prestamo->id,
+                'tabla' => 'prestamos',
+                'registro_id' => $prestamo->id,
                 'accion' => 'ACTUALIZAR',
-                'valores_anteriores' => json_encode($prestamo->getOriginal()),
+                'valores_antiguos' => json_encode($prestamo->getOriginal()),
                 'valores_nuevos' => json_encode($cambios),
-                'ip' => request()->ip(),
+                'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
         }
@@ -45,12 +45,12 @@ class PrestamoObserver
     {
         AuditoriaLog::create([
             'usuario_id' => auth()->id(),
-            'entidad' => 'Prestamo',
-            'entidad_id' => $prestamo->id,
+            'tabla' => 'prestamos',
+            'registro_id' => $prestamo->id,
             'accion' => 'ELIMINAR',
-            'valores_anteriores' => $prestamo->toJson(),
+            'valores_antiguos' => $prestamo->toJson(),
             'valores_nuevos' => null,
-            'ip' => request()->ip(),
+            'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
     }

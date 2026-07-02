@@ -30,7 +30,7 @@ class CuentaAhorroController extends Controller
                   ->orWhereHas('socio', function($q2) use ($buscar) {
                       $q2->where('nombres', 'like', "%{$buscar}%")
                          ->orWhere('apellidos', 'like', "%{$buscar}%")
-                         ->orWhere('dui', 'like', "%{$buscar}%");
+                         ->orWhere('cedula', 'like', "%{$buscar}%");
                   });
             });
         }
@@ -240,7 +240,7 @@ class CuentaAhorroController extends Controller
         $socios = Socio::whereDoesntHave('cuentasAhorro', function($query) {
             $query->whereIn('estado', ['ACTIVA', 'BLOQUEADA']);
         })->where('estado', 'ACTIVO')
-          ->select('id', 'nombres', 'apellidos', 'dui')
+          ->select('id', 'nombres', 'apellidos', 'cedula')
           ->get();
 
         return response()->json($socios);

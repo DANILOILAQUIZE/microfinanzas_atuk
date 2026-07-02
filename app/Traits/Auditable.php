@@ -27,12 +27,12 @@ trait Auditable
 
         AuditoriaLog::create([
             'usuario_id' => auth()->id(),
-            'entidad' => class_basename($model),
-            'entidad_id' => $model->id,
+            'tabla' => $model->getTable(),
+            'registro_id' => $model->id,
             'accion' => $accion,
-            'valores_anteriores' => $valoresAnteriores ? json_encode($valoresAnteriores) : null,
+            'valores_antiguos' => $valoresAnteriores ? json_encode($valoresAnteriores) : null,
             'valores_nuevos' => $valoresNuevos ? json_encode($valoresNuevos) : null,
-            'ip' => request()->ip(),
+            'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
     }

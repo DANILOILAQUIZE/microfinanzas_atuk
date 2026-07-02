@@ -118,9 +118,9 @@
                                 {{ Str::limit($parametro->descripcion, 50) ?? '-' }}
                             </td>
                             <td>
-                                <div class="btn-list flex-nowrap">
+                                <div class="btn-action-group">
                                     @if(hasPermission('gestionar_parametros'))
-                                    <button type="button" class="btn btn-sm btn-icon" title="Editar" onclick="editarParametro({{ $parametro->id }})">
+                                    <button type="button" class="btn-action btn-action-edit" title="Editar" onclick="editarParametro({{ $parametro->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -128,9 +128,9 @@
                                             <path d="M16 5l3 3"/>
                                         </svg>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon" title="Eliminar" 
+                                    <button type="button" class="btn-action btn-action-delete" title="Eliminar" 
                                             onclick="confirmarEliminacion({{ $parametro->id }}, '{{ $parametro->nombre }}')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M4 7l16 0"/>
                                             <path d="M10 11l0 6"/>
@@ -237,6 +237,9 @@
     </div>
 </div>
 
+{{-- Botón invisible para abrir modal de editar desde JavaScript --}}
+<button type="button" id="triggerModalEditarParametro" data-bs-toggle="modal" data-bs-target="#modalEditarParametro" style="display:none;"></button>
+
 {{-- Modal Editar Parámetro --}}
 <div class="modal modal-blur fade" id="modalEditarParametro" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -315,7 +318,12 @@
 @push('scripts')
 <script>
 function editarParametro(parametroId) {
-    fetch(`/parametros/${parametroId}/edit`)
+    fetch(`/parametros/${parametroId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             document.getElementById('formEditarParametro').action = `/parametros/${parametroId}`;
@@ -326,7 +334,8 @@ function editarParametro(parametroId) {
             document.getElementById('edit_grupo').value = data.parametro.grupo || '';
             document.getElementById('edit_descripcion').value = data.parametro.descripcion || '';
             
-            new bootstrap.Modal(document.getElementById('modalEditarParametro')).show();
+            // Mostrar modal usando botón trigger
+            document.getElementById('triggerModalEditarParametro').click();
         })
         .catch(error => {
             console.error('Error:', error);

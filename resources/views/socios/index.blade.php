@@ -85,10 +85,10 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="avatar avatar-sm me-2 bg-blue-lt">
-                                        {{ strtoupper(substr($socio->nombre, 0, 1)) }}
+                                        {{ strtoupper(substr($socio->nombres, 0, 1)) }}
                                     </span>
                                     <div>
-                                        <div class="fw-bold">{{ $socio->nombre }} {{ $socio->apellido }}</div>
+                                        <div class="fw-bold">{{ $socio->nombres }} {{ $socio->apellidos }}</div>
                                         <div class="text-muted small">{{ $socio->ciudad ?? '-' }}</div>
                                     </div>
                                 </div>
@@ -97,7 +97,7 @@
                                 {{ $socio->telefono }}
                             </td>
                             <td class="text-muted">
-                                {{ $socio->email ?? '-' }}
+                                {{ $socio->correo ?? '-' }}
                             </td>
                             <td>
                                 @if($socio->estado == 'ACTIVO')
@@ -110,8 +110,8 @@
                                 {{ $socio->created_at ? $socio->created_at->format('d/m/Y') : '-' }}
                             </td>
                             <td>
-                                <div class="btn-list flex-nowrap">
-                                    <a href="{{ route('socios.show', $socio) }}" class="btn btn-sm btn-icon" title="Ver">
+                                <div class="btn-action-group">
+                                    <a href="{{ route('socios.show', $socio) }}" class="btn-action btn-action-view" title="Ver detalles">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/>
@@ -119,7 +119,7 @@
                                         </svg>
                                     </a>
                                     @if(hasPermission('editar_socios'))
-                                    <button type="button" class="btn btn-sm btn-icon" title="Editar" onclick="editarSocio({{ $socio->id }})">
+                                    <button type="button" class="btn-action btn-action-edit" title="Editar" onclick="editarSocio({{ $socio->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -129,9 +129,9 @@
                                     </button>
                                     @endif
                                     @if(hasPermission('eliminar_socios'))
-                                    <button type="button" class="btn btn-sm btn-icon" title="Eliminar" 
-                                            onclick="confirmarEliminacion({{ $socio->id }}, '{{ $socio->nombre }} {{ $socio->apellido }}')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                    <button type="button" class="btn-action btn-action-delete" title="Eliminar" 
+                                            onclick="confirmarEliminacion({{ $socio->id }}, '{{ $socio->nombres }} {{ $socio->apellidos }}')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M4 7l16 0"/>
                                             <path d="M10 11l0 6"/>
@@ -168,6 +168,9 @@
 </div>
 
 @endsection
+
+{{-- Botón invisible para abrir modal desde JavaScript --}}
+<button type="button" id="triggerModalEditar" data-bs-toggle="modal" data-bs-target="#modalEditarSocio" style="display:none;"></button>
 
 {{-- Modal Crear Socio --}}
 <div class="modal modal-blur fade" id="modalCrearSocio" tabindex="-1" role="dialog" aria-hidden="true">
@@ -373,15 +376,45 @@
 
 @push('scripts')
 <script>
+// Función para formatear fechas ISO a formato yyyy-MM-dd
+function formatearFecha(fechaISO) {
+    if (!fechaISO) return '';
+    // Si ya está en formato yyyy-MM-dd, devolverla tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaISO)) {
+        return fechaISO;
+    }
+    // Si es formato ISO, extraer solo la fecha
+    return fechaISO.split('T')[0];
+}
+
 function editarSocio(socioId) {
-    fetch(`/socios/${socioId}/edit`)
-        .then(response => response.json())
+    console.log('Cargando datos del socio:', socioId);
+    
+    fetch(`/socios/${socioId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('HTTP error ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
+            
+            if (!data.socio) {
+                throw new Error('No se recibieron datos del socio');
+            }
+            
             document.getElementById('formEditarSocio').action = `/socios/${socioId}`;
             document.getElementById('edit_cedula').value = data.socio.cedula || '';
             document.getElementById('edit_nombre').value = data.socio.nombres || '';
             document.getElementById('edit_apellido').value = data.socio.apellidos || '';
-            document.getElementById('edit_fecha_nacimiento').value = data.socio.fecha_nacimiento || '';
+            document.getElementById('edit_fecha_nacimiento').value = formatearFecha(data.socio.fecha_nacimiento);
             document.getElementById('edit_genero').value = data.socio.genero || '';
             document.getElementById('edit_telefono').value = data.socio.telefono || '';
             document.getElementById('edit_email').value = data.socio.correo || '';
@@ -390,11 +423,12 @@ function editarSocio(socioId) {
             document.getElementById('edit_ocupacion').value = data.socio.ocupacion || '';
             document.getElementById('edit_estado').value = data.socio.estado || 'ACTIVO';
             
-            new bootstrap.Modal(document.getElementById('modalEditarSocio')).show();
+            // Abrir modal usando botón trigger
+            document.getElementById('triggerModalEditar').click();
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los datos del socio');
+            console.error('Error completo:', error);
+            alert('Error al cargar los datos del socio: ' + error.message);
         });
 }
 

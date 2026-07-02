@@ -102,6 +102,13 @@ class TipoPrestamoController extends Controller
      */
     public function edit(TipoPrestamo $tiposPrestamo)
     {
+        // Si es una petición AJAX, devolver JSON para el modal
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'tipo' => $tiposPrestamo
+            ]);
+        }
+        
         return view('tipos-prestamo.edit', compact('tiposPrestamo'));
     }
 

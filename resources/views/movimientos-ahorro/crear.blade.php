@@ -200,10 +200,29 @@
 <script>
     @if(!$cuenta)
     // Cargar cuentas activas al cargar la página
+    console.log('Cargando cuentas activas...');
     fetch('{{ route('movimientos-ahorro.cuentas-activas') }}')
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta recibida:', response.status);
+            if (!response.ok) {
+                throw new Error('Error en la respuesta: ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Cuentas recibidas:', data);
             const select = document.getElementById('cuenta_id');
+            
+            if (data.length === 0) {
+                console.warn('No hay cuentas activas');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No hay cuentas activas disponibles';
+                option.disabled = true;
+                select.appendChild(option);
+                return;
+            }
+            
             data.forEach(cuenta => {
                 const option = document.createElement('option');
                 option.value = cuenta.id;
@@ -214,6 +233,11 @@
                 option.dataset.socio = `${cuenta.socio.nombres} ${cuenta.socio.apellidos}`;
                 select.appendChild(option);
             });
+            console.log('Cuentas cargadas exitosamente');
+        })
+        .catch(error => {
+            console.error('Error al cargar cuentas:', error);
+            alert('Error al cargar las cuentas. Por favor, recarga la página.');
         });
 
     // Mostrar información de cuenta al seleccionar

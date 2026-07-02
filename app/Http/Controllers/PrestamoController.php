@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Prestamo;
 use App\Models\Socio;
 use App\Models\TipoPrestamo;
+use App\Models\CuentaAhorro;
+use App\Models\MovimientoAhorro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -136,34 +138,85 @@ class PrestamoController extends Controller
     {
         $request->validate([
             'fecha_desembolso' => 'required|date|after_or_equal:today',
+            'metodo_desembolso' => 'required|in:EFECTIVO,TRANSFERENCIA,DEPOSITO_AHORRO,CHEQUE',
+            'fecha_primer_pago' => 'required|date|after_or_equal:fecha_desembolso',
+            'dia_vencimiento' => 'required|integer|min:1|max:28',
             'observaciones' => 'nullable|string',
         ], [
             'fecha_desembolso.required' => 'La fecha de desembolso es obligatoria',
             'fecha_desembolso.after_or_equal' => 'La fecha de desembolso debe ser hoy o posterior',
+            'metodo_desembolso.required' => 'El método de desembolso es obligatorio',
+            'fecha_primer_pago.required' => 'La fecha del primer pago es obligatoria',
+            'fecha_primer_pago.after_or_equal' => 'El primer pago debe ser después o igual al desembolso',
+            'dia_vencimiento.required' => 'El día de vencimiento es obligatorio',
+            'dia_vencimiento.min' => 'El día de vencimiento debe ser entre 1 y 28',
+            'dia_vencimiento.max' => 'El día de vencimiento debe ser entre 1 y 28',
         ]);
 
         if ($prestamo->estado_aprobacion !== 'PENDIENTE') {
             return back()->with('error', 'Este préstamo ya fue procesado');
         }
 
+        // VALIDACIÓN OBLIGATORIA: El socio DEBE tener cuenta de ahorro activa
+        // Esto es requisito para TODOS los métodos de desembolso
+        $cuentaAhorro = CuentaAhorro::where('socio_id', $prestamo->socio_id)
+            ->where('estado', 'ACTIVA')
+            ->first();
+
+        if (!$cuentaAhorro) {
+            return back()->with('error', 'El socio no tiene una cuenta de ahorro activa. Todos los socios deben tener una cuenta de ahorro para poder acceder a préstamos. Por favor, cree una cuenta de ahorro antes de aprobar el préstamo.');
+        }
+
         DB::beginTransaction();
         try {
+            // 1. Actualizar el préstamo
             $prestamo->update([
                 'estado_aprobacion' => 'APROBADO',
-                'estado' => 'ACTIVO', // El préstamo pasa a ACTIVO al aprobarse
+                'estado' => 'ACTIVO',
                 'fecha_aprobacion' => now(),
                 'fecha_desembolso' => $request->fecha_desembolso,
                 'usuario_aprobador_id' => auth()->id(),
                 'observaciones' => $request->observaciones,
             ]);
 
-            // Generar cuotas automáticamente
-            $this->generarCuotas($prestamo, $request->fecha_desembolso);
+            // 2. Generar cuotas automáticamente con día de vencimiento mensual
+            $this->generarCuotas($prestamo, $request->fecha_primer_pago, $request->dia_vencimiento);
+            
+            // 3. Registrar el desembolso SOLO SI el método es depósito a ahorro
+            $mensajeDesembolso = '';
+            if ($request->metodo_desembolso === 'DEPOSITO_AHORRO') {
+                // Registrar el desembolso como depósito en la cuenta de ahorro
+                MovimientoAhorro::create([
+                    'cuenta_id' => $cuentaAhorro->id,
+                    'tipo_movimiento' => 'DEPOSITO',
+                    'monto' => $prestamo->monto,
+                    'saldo_anterior' => $cuentaAhorro->saldo,
+                    'saldo_posterior' => $cuentaAhorro->saldo + $prestamo->monto,
+                    'fecha_movimiento' => $request->fecha_desembolso,
+                    'descripcion' => 'Desembolso de préstamo #' . $prestamo->id,
+                    'usuario_id' => auth()->id(),
+                    'referencia' => 'PRESTAMO-' . $prestamo->id,
+                    'metodo_transaccion' => 'TRANSFERENCIA',
+                ]);
+
+                // Actualizar el saldo de la cuenta de ahorro
+                $cuentaAhorro->increment('saldo', $prestamo->monto);
+                
+                $mensajeDesembolso = ' Se depositó $' . number_format($prestamo->monto, 2) . ' en la cuenta de ahorro del socio.';
+            } else {
+                // Para otros métodos, solo registrar la aprobación
+                $metodosTexto = [
+                    'EFECTIVO' => 'en efectivo',
+                    'TRANSFERENCIA' => 'por transferencia a cuenta externa',
+                    'CHEQUE' => 'mediante cheque',
+                ];
+                $mensajeDesembolso = ' El desembolso de $' . number_format($prestamo->monto, 2) . ' se realizará ' . $metodosTexto[$request->metodo_desembolso] . '.';
+            }
             
             DB::commit();
 
             return redirect()->route('prestamos.show', $prestamo)
-                ->with('success', 'Préstamo aprobado exitosamente. Se generaron ' . $prestamo->plazo . ' cuotas.');
+                ->with('success', 'Préstamo aprobado exitosamente. Se generaron ' . $prestamo->plazo . ' cuotas con vencimiento el día ' . $request->dia_vencimiento . ' de cada mes.' . $mensajeDesembolso);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error al aprobar el préstamo: ' . $e->getMessage());
@@ -173,7 +226,7 @@ class PrestamoController extends Controller
     /**
      * Generar cuotas para un préstamo aprobado.
      */
-    private function generarCuotas(Prestamo $prestamo, $fechaDesembolso)
+    private function generarCuotas(Prestamo $prestamo, $fechaPrimerPago, $diaVencimiento)
     {
         $montoTotal = $prestamo->monto_total;
         $numeroCuotas = $prestamo->plazo;
@@ -186,11 +239,23 @@ class PrestamoController extends Controller
         $capitalPorCuota = $prestamo->monto / $numeroCuotas;
         
         $saldoPendiente = $montoTotal;
-        $fechaVencimiento = \Carbon\Carbon::parse($fechaDesembolso);
-
+        
+        // Convertir fecha a objeto Carbon y día a entero
+        $fechaVencimiento = \Carbon\Carbon::parse($fechaPrimerPago);
+        $diaVencimiento = (int) $diaVencimiento; // Convertir a entero
+        
         for ($i = 1; $i <= $numeroCuotas; $i++) {
-            // La primera cuota vence 30 días después del desembolso
-            $fechaVencimiento = $fechaVencimiento->addMonth();
+            // Para la primera cuota, usar la fecha exacta ingresada
+            if ($i > 1) {
+                // Para las siguientes cuotas, avanzar un mes
+                $fechaVencimiento->addMonth();
+                
+                // Ajustar al día de vencimiento especificado
+                // Si el mes no tiene ese día (ej: 31 en febrero), usar el último día del mes
+                $ultimoDiaMes = $fechaVencimiento->daysInMonth;
+                $diaAjustado = min($diaVencimiento, $ultimoDiaMes);
+                $fechaVencimiento->day = $diaAjustado;
+            }
             
             // Para la última cuota, ajustar el monto para evitar errores de redondeo
             if ($i === $numeroCuotas) {
@@ -257,6 +322,11 @@ class PrestamoController extends Controller
     public function edit(Prestamo $prestamo)
     {
         if ($prestamo->estado_aprobacion !== 'PENDIENTE') {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'error' => 'Solo se pueden editar préstamos pendientes'
+                ], 400);
+            }
             return redirect()->route('prestamos.index')
                 ->with('error', 'Solo se pueden editar préstamos pendientes');
         }
@@ -267,6 +337,7 @@ class PrestamoController extends Controller
         // Si es AJAX, devolver JSON para modal
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
+                'success' => true,
                 'prestamo' => $prestamo,
                 'socios' => $socios,
                 'tiposPrestamo' => $tiposPrestamo

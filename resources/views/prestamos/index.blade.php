@@ -135,8 +135,8 @@
                                 @endswitch
                             </td>
                             <td>
-                                <div class="btn-list flex-nowrap">
-                                    <a href="{{ route('prestamos.show', $prestamo) }}" class="btn btn-sm btn-icon" title="Ver">
+                                <div class="btn-action-group">
+                                    <a href="{{ route('prestamos.show', $prestamo) }}" class="btn-action btn-action-view" title="Ver detalles">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/>
@@ -146,7 +146,7 @@
                                     
                                     @if($prestamo->estado_aprobacion == 'PENDIENTE')
                                         @if(hasPermission('editar_prestamos'))
-                                        <button type="button" class="btn btn-sm btn-icon" title="Editar" onclick="editarPrestamo({{ $prestamo->id }})">
+                                        <button type="button" class="btn-action btn-action-edit" title="Editar" onclick="editarPrestamo({{ $prestamo->id }})">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -157,13 +157,13 @@
                                         @endif
                                         
                                         @if(hasPermission('aprobar_prestamos'))
-                                        <button type="button" class="btn btn-sm btn-icon btn-success" title="Aprobar" onclick="mostrarModalAprobar({{ $prestamo->id }})">
+                                        <button type="button" class="btn-action btn-action-success" title="Aprobar" onclick="mostrarModalAprobar({{ $prestamo->id }})">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M5 12l5 5l10 -10"/>
                                             </svg>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-icon btn-danger" title="Rechazar" onclick="mostrarModalRechazar({{ $prestamo->id }})">
+                                        <button type="button" class="btn-action btn-action-delete" title="Rechazar" onclick="mostrarModalRechazar({{ $prestamo->id }})">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M18 6l-12 12"/>
@@ -193,6 +193,11 @@
 {{-- MODALES SE AGREGAN EN LA PRÓXIMA RESPUESTA POR LÍMITE DE TOKENS --}}
 
 @endsection
+
+{{-- Botones invisibles para abrir modales desde JavaScript --}}
+<button type="button" id="triggerModalEditar" data-bs-toggle="modal" data-bs-target="#modalEditarPrestamo" style="display:none;"></button>
+<button type="button" id="triggerModalAprobar" data-bs-toggle="modal" data-bs-target="#modalAprobarPrestamo" style="display:none;"></button>
+<button type="button" id="triggerModalRechazar" data-bs-toggle="modal" data-bs-target="#modalRechazarPrestamo" style="display:none;"></button>
 
 {{-- Modal Crear Préstamo --}}
 <div class="modal modal-blur fade" id="modalCrearPrestamo" tabindex="-1" role="dialog" aria-hidden="true">
@@ -393,7 +398,64 @@
                     <div class="mb-3">
                         <label class="form-label required">Fecha de Desembolso</label>
                         <input type="date" name="fecha_desembolso" class="form-control" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" required>
+                        <small class="form-hint">Fecha en que se entregará el dinero al socio</small>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required">Método de Desembolso</label>
+                        <select name="metodo_desembolso" id="metodo_desembolso_aprobar" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia a cuenta externa</option>
+                            <option value="DEPOSITO_AHORRO">Depósito a cuenta de ahorro del socio</option>
+                            <option value="CHEQUE">Cheque</option>
+                        </select>
+                        <small class="form-hint">Cómo se entregará el dinero al socio</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Fecha de Primer Pago</label>
+                                <input type="date" name="fecha_primer_pago" id="fecha_primer_pago_aprobar" class="form-control" min="{{ date('Y-m-d') }}" required>
+                                <small class="form-hint">Fecha en que vence la primera cuota</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label required">Día de Vencimiento Mensual</label>
+                                <select name="dia_vencimiento" id="dia_vencimiento_aprobar" class="form-select" required>
+                                    <option value="">Seleccione...</option>
+                                    @for($dia = 1; $dia <= 28; $dia++)
+                                    <option value="{{ $dia }}" {{ $dia == 20 ? 'selected' : '' }}>Día {{ $dia }}</option>
+                                    @endfor
+                                </select>
+                                <small class="form-hint">Día del mes en que vence cada cuota (recomendado: 20)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <div class="d-flex">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    <polyline points="11 12 12 12 12 16 13 16"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="alert-title">Sistema de Pagos y Mora</h4>
+                                <div class="text-muted">
+                                    <strong>Período de pago:</strong> Del día 1 al día seleccionado de cada mes<br>
+                                    <strong>Mora:</strong> Si el socio paga después del día de vencimiento, entra automáticamente en mora<br>
+                                    <strong>Desembolso:</strong> El préstamo se entrega según el método seleccionado. El ahorro del socio permanece disponible.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Observaciones</label>
                         <textarea name="observaciones" class="form-control" rows="3" placeholder="Observaciones adicionales..."></textarea>
@@ -494,9 +556,22 @@ function calcularPrestamo(modo) {
 
 // Editar préstamo
 function editarPrestamo(prestamoId) {
-    fetch(`/prestamos/${prestamoId}/edit`)
-        .then(response => response.json())
-        .then(data => {
+    fetch(`/prestamos/${prestamoId}/edit`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error HTTP: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.prestamo) {
             document.getElementById('formEditarPrestamo').action = `/prestamos/${prestamoId}`;
             document.getElementById('edit_socio_id').value = data.prestamo.socio_id;
             document.getElementById('edit_tipo_prestamo_id').value = data.prestamo.tipo_prestamo_id;
@@ -506,24 +581,109 @@ function editarPrestamo(prestamoId) {
             
             cargarInfoTipo(data.prestamo.tipo_prestamo_id, 'editar');
             
-            new bootstrap.Modal(document.getElementById('modalEditarPrestamo')).show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los datos del préstamo');
-        });
+            // Abrir modal usando botón trigger
+            document.getElementById('triggerModalEditar').click();
+        } else {
+            alert(data.error || 'Error: Datos del préstamo no encontrados');
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        alert('Error al cargar los datos del préstamo: ' + error.message);
+    });
 }
 
 // Mostrar modal aprobar
 function mostrarModalAprobar(prestamoId) {
-    document.getElementById('formAprobarPrestamo').action = `/prestamos/${prestamoId}/aprobar`;
-    new bootstrap.Modal(document.getElementById('modalAprobarPrestamo')).show();
+    console.log('Abriendo modal aprobar para préstamo:', prestamoId);
+    
+    const form = document.getElementById('formAprobarPrestamo');
+    form.action = `/prestamos/${prestamoId}/aprobar`;
+    
+    // Limpiar campos
+    const fechaInput = form.querySelector('[name="fecha_desembolso"]');
+    const obsInput = form.querySelector('[name="observaciones"]');
+    
+    if (fechaInput) fechaInput.value = '{{ date("Y-m-d") }}';
+    if (obsInput) obsInput.value = '';
+    
+    // Sugerir fechas por defecto para los pagos
+    const fechaPrimerPagoInput = document.getElementById('fecha_primer_pago_aprobar');
+    const diaVencimientoSelect = document.getElementById('dia_vencimiento_aprobar');
+    
+    if (fechaPrimerPagoInput && diaVencimientoSelect) {
+        // Sugerir primer pago 30 días después del desembolso
+        const fechaDesembolso = new Date('{{ date("Y-m-d") }}');
+        const fechaPrimerPagoSugerida = new Date(fechaDesembolso);
+        fechaPrimerPagoSugerida.setDate(fechaPrimerPagoSugerida.getDate() + 30);
+        fechaPrimerPagoInput.value = fechaPrimerPagoSugerida.toISOString().split('T')[0];
+        
+        // El día de vencimiento ya está preseleccionado en 20
+    }
+    
+    // Abrir modal usando botón trigger
+    document.getElementById('triggerModalAprobar').click();
 }
 
 // Mostrar modal rechazar
 function mostrarModalRechazar(prestamoId) {
-    document.getElementById('formRechazarPrestamo').action = `/prestamos/${prestamoId}/rechazar`;
-    new bootstrap.Modal(document.getElementById('modalRechazarPrestamo')).show();
+    console.log('Abriendo modal rechazar para préstamo:', prestamoId);
+    
+    const form = document.getElementById('formRechazarPrestamo');
+    form.action = `/prestamos/${prestamoId}/rechazar`;
+    
+    // Limpiar campo
+    const motivoInput = form.querySelector('[name="motivo_rechazo"]');
+    if (motivoInput) motivoInput.value = '';
+    
+    // Abrir modal usando botón trigger
+    document.getElementById('triggerModalRechazar').click();
 }
+
+// Fix aria-hidden warning: blur focus from close buttons before modal hides
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle all modals
+    const modales = ['modalCrearPrestamo', 'modalEditarPrestamo', 'modalAprobarPrestamo', 'modalRechazarPrestamo'];
+    
+    modales.forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            modalElement.addEventListener('hide.bs.modal', function (e) {
+                // Remove focus from any focused element inside the modal
+                if (document.activeElement && this.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            });
+        }
+    });
+    
+    // Optional: Automatically hide success/error alerts after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+});
+
+// Validación de fechas en modal de aprobación
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaDesembolsoInput = document.querySelector('#modalAprobarPrestamo [name="fecha_desembolso"]');
+    const fechaPrimerPagoInput = document.getElementById('fecha_primer_pago_aprobar');
+    
+    if (fechaDesembolsoInput && fechaPrimerPagoInput) {
+        // Cuando cambia la fecha de desembolso, actualizar el mínimo del primer pago
+        fechaDesembolsoInput.addEventListener('change', function() {
+            fechaPrimerPagoInput.setAttribute('min', this.value);
+            // Sugerir primer pago 30 días después
+            const fechaDesembolso = new Date(this.value);
+            const fechaPrimerPagoSugerida = new Date(fechaDesembolso);
+            fechaPrimerPagoSugerida.setDate(fechaPrimerPagoSugerida.getDate() + 30);
+            fechaPrimerPagoInput.value = fechaPrimerPagoSugerida.toISOString().split('T')[0];
+        });
+    }
+});
 </script>
 @endpush

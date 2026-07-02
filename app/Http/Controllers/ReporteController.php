@@ -200,7 +200,7 @@ class ReporteController extends Controller
                 'total_prestamos' => Prestamo::whereIn('estado', ['ACTIVO', 'VENCIDO'])->count(),
                 'socios_activos' => Socio::where('estado', 'ACTIVO')->count(),
                 'indice_morosidad' => $carteraTotal > 0 ? ($carteraVencida / $carteraTotal) * 100 : 0,
-                'saldo_ahorro' => DB::table('cuenta_ahorros')->where('estado', 'ACTIVA')->sum('saldo'),
+                'saldo_ahorro' => DB::table('cuentas_ahorro')->where('estado', 'ACTIVA')->sum('saldo'),
             ];
         }
 

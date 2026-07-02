@@ -62,15 +62,15 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="btn-list flex-nowrap">
-                                    <a href="{{ route('roles.show', $rol) }}" class="btn btn-sm btn-icon" title="Ver">
+                                <div class="btn-action-group">
+                                    <a href="{{ route('roles.show', $rol) }}" class="btn-action btn-action-view" title="Ver">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/>
                                             <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>
                                         </svg>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-icon" title="Editar" onclick="editarRol({{ $rol->id }})">
+                                    <button type="button" class="btn-action btn-action-edit" title="Editar" onclick="editarRol({{ $rol->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -78,9 +78,9 @@
                                             <path d="M16 5l3 3"/>
                                         </svg>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon" title="Eliminar" 
+                                    <button type="button" class="btn-action btn-action-delete" title="Eliminar" 
                                             onclick="confirmarEliminacion({{ $rol->id }}, '{{ $rol->nombre }}')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M4 7l16 0"/>
                                             <path d="M10 11l0 6"/>
@@ -187,6 +187,9 @@
     </div>
 </div>
 
+{{-- Botón invisible para abrir modal de editar desde JavaScript --}}
+<button type="button" id="triggerModalEditarRol" data-bs-toggle="modal" data-bs-target="#modalEditarRol" style="display:none;"></button>
+
 {{-- Modal Editar Rol --}}
 <div class="modal modal-blur fade" id="modalEditarRol" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -274,7 +277,12 @@ function deseleccionarTodosEditar() {
 
 // Función para cargar datos del rol en el modal de edición
 function editarRol(rolId) {
-    fetch(`/roles/${rolId}/edit`)
+    fetch(`/roles/${rolId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             // Actualizar action del formulario
@@ -314,8 +322,8 @@ function editarRol(rolId) {
             
             document.getElementById('permisos-editar-container').innerHTML = permisosHTML;
             
-            // Mostrar modal
-            new bootstrap.Modal(document.getElementById('modalEditarRol')).show();
+            // Mostrar modal usando botón trigger
+            document.getElementById('triggerModalEditarRol').click();
         })
         .catch(error => {
             console.error('Error:', error);

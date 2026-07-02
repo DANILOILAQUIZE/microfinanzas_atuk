@@ -54,6 +54,112 @@
         .navbar-vertical .dropdown-menu {
             background: rgba(255,255,255,0.95);
         }
+
+        /* Separador visual antes del footer */
+        .sidebar-divider {
+            border-top: 2px solid rgba(255,255,255,0.2);
+            margin: 1.5rem 0.75rem;
+        }
+
+        /* Footer del sidebar más espaciado */
+        .sidebar-footer-wrapper {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+
+        /* ========== BOTONES DE ACCIÓN MEJORADOS ========== */
+        .btn-action-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            padding: 0 !important;
+            border-radius: 6px;
+            border: 1.5px solid;
+            background: white !important;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+        }
+
+        .btn-action.btn-action-view {
+            border-color: #0d6efd;
+            color: #0d6efd !important;
+        }
+
+        .btn-action.btn-action-view:hover {
+            background: #0d6efd !important;
+            color: white !important;
+        }
+
+        .btn-action.btn-action-edit {
+            border-color: #ffc107;
+            color: #ffc107 !important;
+        }
+
+        .btn-action.btn-action-edit:hover {
+            background: #ffc107 !important;
+            color: #000 !important;
+        }
+
+        .btn-action.btn-action-delete {
+            border-color: #dc3545;
+            color: #dc3545 !important;
+        }
+
+        .btn-action.btn-action-delete:hover {
+            background: #dc3545 !important;
+            color: white !important;
+        }
+
+        .btn-action.btn-action-success {
+            border-color: #198754;
+            color: #198754 !important;
+        }
+
+        .btn-action.btn-action-success:hover {
+            background: #198754 !important;
+            color: white !important;
+        }
+
+        .btn-action.btn-action-info {
+            border-color: #0dcaf0;
+            color: #0dcaf0 !important;
+        }
+
+        .btn-action.btn-action-info:hover {
+            background: #0dcaf0 !important;
+            color: white !important;
+        }
+
+        .btn-action .icon {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+        }
+
+        /* Asegurar que los botones no hereden estilos de Tabler */
+        .btn-action.btn-sm {
+            width: 32px !important;
+            height: 32px !important;
+        }
     </style>
 
     @stack('styles')
@@ -143,8 +249,11 @@
                         </li>
                     </ul>
 
+                    {{-- Separador visual --}}
+                    <div class="sidebar-divider"></div>
+
                     {{-- Footer con cerrar sesión --}}
-                    <div class="mt-auto">
+                    <div class="sidebar-footer-wrapper">
                         <div class="card mb-0 border-0 shadow-none" style="background: rgba(255,255,255,0.1);">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center mb-2">

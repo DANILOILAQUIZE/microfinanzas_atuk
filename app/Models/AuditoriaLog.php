@@ -17,7 +17,6 @@ class AuditoriaLog extends Model
         'valores_nuevos',
         'ip_address',
         'user_agent',
-        'fecha_accion',
     ];
 
     protected $casts = [

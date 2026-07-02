@@ -114,8 +114,8 @@
                                 {{ $usuario->created_at->format('d/m/Y') }}
                             </td>
                             <td>
-                                <div class="btn-list flex-nowrap">
-                                    <button type="button" class="btn btn-sm btn-icon" title="Editar" onclick="editarUsuario({{ $usuario->id }})">
+                                <div class="btn-action-group">
+                                    <button type="button" class="btn-action btn-action-edit" title="Editar" onclick="editarUsuario({{ $usuario->id }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -124,9 +124,9 @@
                                         </svg>
                                     </button>
                                     @if($usuario->id !== auth()->id())
-                                    <button type="button" class="btn btn-sm btn-icon" title="Eliminar" 
+                                    <button type="button" class="btn-action btn-action-delete" title="Eliminar" 
                                             onclick="confirmarEliminacion({{ $usuario->id }}, '{{ $usuario->nombre }} {{ $usuario->apellido }}')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M4 7l16 0"/>
                                             <path d="M10 11l0 6"/>
@@ -225,6 +225,9 @@
     </div>
 </div>
 
+{{-- Botón invisible para abrir modal de editar desde JavaScript --}}
+<button type="button" id="triggerModalEditarUsuario" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario" style="display:none;"></button>
+
 {{-- Modal Editar Usuario --}}
 <div class="modal modal-blur fade" id="modalEditarUsuario" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -300,7 +303,12 @@
 @push('scripts')
 <script>
 function editarUsuario(usuarioId) {
-    fetch(`/usuarios/${usuarioId}/edit`)
+    fetch(`/usuarios/${usuarioId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             document.getElementById('formEditarUsuario').action = `/usuarios/${usuarioId}`;
@@ -310,7 +318,8 @@ function editarUsuario(usuarioId) {
             document.getElementById('edit_rol_id').value = data.usuario.rol_id;
             document.getElementById('edit_estado').value = data.usuario.estado;
             
-            new bootstrap.Modal(document.getElementById('modalEditarUsuario')).show();
+            // Mostrar modal usando botón trigger
+            document.getElementById('triggerModalEditarUsuario').click();
         })
         .catch(error => {
             console.error('Error:', error);
